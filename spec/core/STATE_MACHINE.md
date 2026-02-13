@@ -1,7 +1,4 @@
----
-state: HARDENED
-version: v1
----
+state: HARDENED version: v1
 ISC-CORE STATE MACHINE
 This document defines the canonical lifecycle state machine for all normative documents in this repository.
 This is a process contract, not a protocol specification.
@@ -36,7 +33,8 @@ Duplicate keys MUST NOT be permitted. If duplicate keys are detected, CI MUST fa
 Required fields:
 state
 version
-If state is missing, CI MUST fail. If version is missing, CI MUST fail.
+If state is missing, CI MUST fail.
+If version is missing, CI MUST fail.
 3.4 State Field Rules
 state MUST be exactly one of:
 DRAFT
@@ -60,11 +58,14 @@ banana
 Optional fields:
 upstreams
 last_hardened_commit
-If upstreams is present, it MUST be a YAML sequence (list). Each upstream entry MUST be a relative POSIX-style path string.
+If upstreams is present, it MUST be a YAML sequence (list).
+Each upstream entry MUST be a relative POSIX-style path string.
 Example:
+Yaml
+Kodu kopyala
 upstreams:
-docs/core/ROADMAP.md
-spec/core/SEQUENTIAL_LOCK_RULE.md
+  - docs/core/ROADMAP.md
+  - spec/core/SEQUENTIAL_LOCK_RULE.md
 4. Allowed Transitions
 State transitions are one-way only:
 DRAFT -> HARDENED
