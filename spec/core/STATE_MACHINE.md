@@ -1,4 +1,7 @@
-
+---
+state: HARDENED
+version: v1
+---
 ISC-CORE STATE MACHINE
 This document defines the canonical lifecycle state machine for all normative documents in this repository.
 This is a process contract, not a protocol specification.
