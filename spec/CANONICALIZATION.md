@@ -98,10 +98,9 @@ No step MAY be skipped.
 1. Byte ingestion
 2. BOM handling
 3. Line ending normalization
-4. Trailing whitespace normalization (text artifacts only)
-5. Unicode normalization (text artifacts only)
-6. Artifact-type specific normalization
-7. Canonical byte emission
+4. Unicode normalization (text artifacts only)
+5. Artifact-type specific normalization
+6. Canonical byte emission
 
 If canonicalization cannot complete deterministically, receiver MUST REJECT.
 
@@ -133,22 +132,21 @@ If null bytes exist, receiver MUST REJECT.
 
 ### 6.1 Canonical Line Ending
 
-All text artifacts MUST normalize line endings to LF (`\n`, byte `0x0A`).
+All text artifacts MUST normalize line endings to LF (\n, byte 0x0A).
 
 The following conversions MUST be applied:
 
-- CRLF (`\r\n`) MUST be converted to LF (`\n`)
-- CR (`\r`) MUST be converted to LF (`\n`)
+- CRLF (\r\n) MUST be converted to LF (\n)
+- CR (\r) MUST be converted to LF (\n)
 
 ### 6.2 Final Newline Rule
 
 Text artifacts MUST end with exactly one LF.
 
-If a file ends with no newline, receiver MUST append one LF.
+- If a file ends with no newline, receiver MUST append one LF.
+- If a file ends with multiple trailing LF characters, receiver MUST reduce them to exactly one LF.
 
-If a file ends with multiple newlines, receiver MUST preserve them exactly as written.
-
-The final newline normalization MUST NOT remove content.
+This rule normalizes only the end-of-file newline run; it MUST NOT remove any non-newline content.
 
 ---
 
@@ -159,8 +157,6 @@ The final newline normalization MUST NOT remove content.
 For text artifacts, trailing whitespace at the end of a line MUST be preserved.
 
 Whitespace trimming MUST NOT be applied unless explicitly stated by a downstream spec.
-
-This prevents semantic ambiguity caused by "helpful formatters".
 
 ### 7.2 Tab Characters
 
@@ -218,15 +214,15 @@ Frontmatter is treated as part of the artifact.
 
 ### 9.3 JSON Artifacts (Non-Canonical)
 
-If an artifact is a `.json` file, it MUST be treated as raw UTF-8 bytes.
+If an artifact is a `.json` file, it MUST be treated as a raw text artifact for canonical bytes.
 
-Receivers MUST NOT re-serialize `.json` files unless explicitly required by another spec.
+Receivers MUST NOT re-serialize `.json` artifact files, unless explicitly required by another spec.
 
-This prevents accidental drift due to JSON serializer differences.
+This prevents drift due to JSON serializer differences.
 
 ### 9.4 Canonical JSON Objects (RFC 8785)
 
-When a spec requires hashing a JSON object (such as VHI or dependency snapshot):
+When a spec requires hashing a structured JSON object (such as VHI or dependency snapshot):
 
 - the object MUST be canonicalized using RFC 8785
 - the resulting canonical JSON bytes MUST be used for hashing
@@ -261,7 +257,7 @@ Unicode escapes MUST follow RFC 8785 canonical escaping rules.
 
 Numbers MUST be encoded according to RFC 8785.
 
-Receivers MUST NOT emit `1.0` if `1` is canonical.
+Receivers MUST NOT emit 1.0 if 1 is canonical.
 
 Receivers MUST NOT emit scientific notation unless required by canonical form.
 
@@ -368,7 +364,7 @@ A receiver is compliant with this spec only if it:
 - applies NFC normalization for text artifacts
 - uses RFC 8785 for structured stable JSON objects
 - uses SHA-256 for all canonical hashes
-- outputs hashes as sha256:<lowercase hex>
+- outputs hashes as `sha256:<64 lowercase hex>`
 - rejects ambiguous or environment-dependent encodings
 
 Any deviation MUST be treated as a governance violation.
