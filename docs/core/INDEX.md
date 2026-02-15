@@ -1,142 +1,134 @@
-
-# ISC-CORE INDEX (CANONICAL ENTRY POINT)
-
-This file is a process contract, not a protocol specification.
-
-This index is normative for repository structure, file roles, and document precedence.
-
----
-
-## 1. Canonical Repository Layout
-
-The repository MUST use the following top-level structure:
-
-- `core/`  
-  Implementation code. MUST remain deterministic.
-
-- `docs/`  
-  Process and repository governance documents.
-
-- `spec/`  
-  Protocol specifications and normative requirements.
-
-- `vectors/`  
-  Canonical test vectors and golden fixtures.
-
-- `tools/`  
-  CI enforcement scripts, generators, and verification utilities.
-
-No other top-level directories are allowed, except:
-
-- `.github/`
-
----
-
-## 2. Directory Semantics
-
-### 2.1 `docs/`
-
-Contains repository process contracts.
-
-Examples:
-- lifecycle rules
-- freezing policy
-- sequential lock rule
-- CI enforcement rules
-
-### 2.2 `spec/`
-
-Contains protocol and format specifications.
-
-These documents define canonical behavior.
-
-### 2.3 `core/`
-
-Contains the implementation.
-
-Implementation MUST follow `spec/` exactly.
-
-### 2.4 `vectors/`
-
-Contains golden vectors.
-
-Vectors MUST NOT be silently modified or replaced.
-
-### 2.5 `tools/`
-
-Contains CI enforcement tools and validation scripts.
-
----
-
-## 3. Document Precedence Order
-
-When two documents conflict, the following precedence order MUST be applied:
-
-1. `spec/` documents
-2. `docs/core/ROADMAP.md`
-3. `docs/` process contracts
-4. `core/` implementation
-5. `tools/` utilities
-6. `README.md`
-
----
-
-## 4. Canonical Entry Point
-
-The canonical entry point for repository governance is:
-
-- `docs/core/INDEX.md` (this file)
-- `docs/core/ROADMAP.md`
-
----
-
-## 5. Required Core Documents
-
-The following documents MUST exist:
-
-- `docs/core/INDEX.md`
-- `docs/core/ROADMAP.md`
-
----
-
-## 6. Document State Requirement
-
-All `.md` documents under `docs/` and `spec/` MUST begin with YAML frontmatter.
-
-Example:
-
-```md
 ---
 state: DRAFT
 version: v1
 ---
-Required fields:
-state: one of DRAFT|HARDENED|FROZEN
-version: semantic identifier such as v1, v2
-State MUST NOT be absent.
-State regression MUST NOT occur.
-7. Naming Conventions
-All normative documents MUST be named in uppercase.
-Examples:
-STATE_MACHINE.md
-FREEZE_POLICY.md
-SEQUENTIAL_LOCK_RULE.md
-8. ROADMAP Consistency Requirement
-The document ordering defined in docs/core/ROADMAP.md MUST be consistent with this INDEX.
-If the ordering diverges, CI MUST fail.
-9. Determinism Constraint
-The core/ implementation MUST be deterministic.
-It MUST NOT depend on:
-system time
-randomness
-network calls
-environment-dependent behavior
-All such behavior MUST be isolated to tools/ only.
-10. Vector Immutability Contract
-Golden vectors MUST NOT be replaced without explicit versioning.
-Future enforcement SHOULD require:
-a vectors/index.json manifest
-hashes for all vector files
-CI verification of hashes
-11. Final Rule
-This repository MUST remain machine-enforceable.
+
+# ISC Core — INDEX
+
+This document is the canonical entry point for the ISC Core repository.
+
+ISC Core is treated as a frozen genome.
+Therefore, the repository MUST define a stable set of normative governance contracts and a strict stabilization order.
+
+This file defines:
+
+- the authoritative document list
+- the dependency order (canonical build order)
+- the canonical meaning of "Core DNA"
+- the minimal compliance reading path
+
+This is a governance index, not an implementation guide.
+
+---
+
+## 1. Core Principle
+
+ISC Core is a frozen genome.
+
+Therefore:
+
+- deterministic interpretation is mandatory
+- canonical bytes and canonical hashing are mandatory
+- ambiguity is treated as a protocol failure
+- downstream documents MUST NOT advance beyond upstream maturity state
+
+---
+
+## 2. Canonical Document Set (Core DNA)
+
+The following documents define the ISC Core DNA and MUST be treated as normative.
+
+### 2.1 Core Governance Layer (`spec/core/`)
+
+- `spec/core/PROTOCOL_MANIFEST.md`
+- `spec/core/STATE_MACHINE.md`
+- `spec/core/SEQUENTIAL_LOCK_RULE.md`
+- `spec/core/DOC_FORMAT.md`
+
+### 2.2 Core Protocol Layer (`spec/`)
+
+- `spec/CANONICALIZATION.md`
+- `spec/VERDICT_SPEC.md`
+- `spec/EVIDENCE_BLOB.md`
+- `spec/ERROR_CODES.md`
+- `spec/MEMBRANE_PROTOCOLS.md`
+
+---
+
+## 3. Canonical Dependency Order
+
+Documents MUST be read and stabilized in the following order.
+Upstream documents define rules that downstream documents MUST follow.
+
+### 3.1 Absolute Upstream Layer
+
+1. `spec/core/PROTOCOL_MANIFEST.md`
+2. `spec/core/STATE_MACHINE.md`
+3. `spec/core/SEQUENTIAL_LOCK_RULE.md`
+4. `spec/core/DOC_FORMAT.md`
+
+### 3.2 Protocol Contracts Layer
+
+5. `spec/CANONICALIZATION.md`
+6. `spec/VERDICT_SPEC.md`
+7. `spec/EVIDENCE_BLOB.md`
+8. `spec/ERROR_CODES.md`
+9. `spec/MEMBRANE_PROTOCOLS.md`
+
+---
+
+## 4. Mandatory Reading Path (Minimal Compliance)
+
+A receiver implementer MUST read at minimum:
+
+1. `spec/core/PROTOCOL_MANIFEST.md`
+2. `spec/core/DOC_FORMAT.md`
+3. `spec/CANONICALIZATION.md`
+4. `spec/VERDICT_SPEC.md`
+5. `spec/EVIDENCE_BLOB.md`
+6. `spec/ERROR_CODES.md`
+
+Any receiver claiming compliance without implementing these documents is non-compliant.
+
+---
+
+## 5. Document State Rules
+
+Each normative document MUST declare:
+
+- state
+- version
+
+Allowed states:
+
+- DRAFT
+- HARDENED
+- FROZEN
+
+Downstream documents MUST NOT advance beyond upstream state.
+
+Formal rule:
+
+For any document B depending on A:
+
+`state(B) <= state(A)`
+
+---
+
+## 6. Core Compliance Guarantee
+
+A system is considered ISC Core compliant only if:
+
+- it enforces deterministic canonicalization
+- it enforces deterministic verdict evaluation
+- it validates evidence deterministically
+- it enforces canonical reason codes
+- it enforces membrane admission constraints
+
+---
+
+## 7. Final Rule
+
+Any ambiguity in interpreting the ISC Core document set MUST be treated as a failure condition.
+
+This repository MUST be treated as a deterministic governance contract set.
