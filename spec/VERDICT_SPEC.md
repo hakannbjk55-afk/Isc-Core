@@ -427,4 +427,4 @@ Any deviation MUST be treated as a governance violation.
 Any ambiguity not explicitly resolved by this document MUST be treated as a failure condition.
 In DRAFT, failure MAY produce QUARANTINE.
 In HARDENED, failure MUST produce QUARANTINE or REJECT depending on the relevant trigger class.
-In FROZEN, ambiguity MUST produce REJECT.
+In FROZEN, ambiguity MUST produce REJECT.. 
