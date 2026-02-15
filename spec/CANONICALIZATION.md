@@ -118,7 +118,8 @@ If a text artifact is not valid UTF-8, receiver MUST REJECT.
 
 If a UTF-8 BOM is present, it MUST be removed.
 
-If a BOM is present in a non-UTF8 encoding, receiver MUST REJECT.
+If UTF-16 or UTF-32 BOM markers are detected (e.g., 0xFF 0xFE, 0xFE 0xFF, 0x00 0x00 0xFE 0xFF, 0xFF 0xFE 0x00 0x00),
+receiver MUST REJECT.
 
 ### 5.3 Null Bytes
 
@@ -158,6 +159,8 @@ For text artifacts, trailing whitespace at the end of a line MUST be preserved.
 
 Whitespace trimming MUST NOT be applied unless explicitly stated by a downstream spec.
 
+Receivers MUST NOT trim ASCII spaces (0x20) or tabs (0x09) at line end.
+
 ### 7.2 Tab Characters
 
 Tab characters MUST be preserved exactly.
@@ -173,6 +176,8 @@ Tab expansion MUST NOT be performed.
 All text artifacts MUST be normalized to Unicode NFC.
 
 If a receiver cannot perform NFC normalization deterministically, receiver MUST REJECT.
+
+NFC normalization is a canonical transformation and is considered part of artifact identity for all text artifacts.
 
 ### 8.2 Forbidden Transformations
 
@@ -212,6 +217,12 @@ If a markdown artifact contains YAML frontmatter:
 
 Frontmatter is treated as part of the artifact.
 
+YAML frontmatter MUST be parsed for validity in strict mode before any downstream acceptance is possible.
+If strict YAML parsing fails (including duplicate keys, unknown YAML types, or invalid scalars), receiver MUST REJECT.
+
+This validity check MUST NOT rewrite or re-emit YAML bytes.
+Frontmatter bytes remain included in canonical bytes exactly as written, but invalid YAML is not admissible.
+
 ### 9.3 JSON Artifacts (Non-Canonical)
 
 If an artifact is a `.json` file, it MUST be treated as a raw text artifact for canonical bytes.
@@ -219,6 +230,11 @@ If an artifact is a `.json` file, it MUST be treated as a raw text artifact for 
 Receivers MUST NOT re-serialize `.json` artifact files, unless explicitly required by another spec.
 
 This prevents drift due to JSON serializer differences.
+
+Receivers MUST NOT derive structured canonical JSON objects by parsing arbitrary `.json` artifact files for hashing purposes,
+unless an upstream spec section explicitly requires that specific artifact to be parsed and re-encoded via RFC 8785.
+
+Absent an explicit upstream requirement, `.json` artifacts MUST be hashed from canonical bytes only (raw text artifact treatment).
 
 ### 9.4 Canonical JSON Objects (RFC 8785)
 
@@ -259,9 +275,9 @@ Numbers MUST be encoded according to RFC 8785.
 
 Receivers MUST NOT emit 1.0 if 1 is canonical.
 
-Receivers MUST NOT emit scientific notation unless required by canonical form.
-
 If a receiver cannot represent a number deterministically, receiver MUST REJECT.
+
+Number encoding MUST follow RFC 8785 exactly.
 
 ### 10.5 Forbidden JSON Features
 
