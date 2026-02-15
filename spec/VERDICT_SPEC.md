@@ -1,3 +1,4 @@
+
 ---
 state: DRAFT
 version: v1.3
@@ -221,6 +222,7 @@ Dependency list semantics MUST be order-insensitive.
 Receivers MUST NOT treat author-provided list order as meaningful.
 
 Each dependency entry MUST contain:
+
 - path (string)
 - version (string)
 
@@ -232,29 +234,17 @@ dependencies:
     version: v1.0
   - path: spec/core/SEQUENTIAL_LOCK_RULE.md
     version: v1.1
-
 If dependencies exist but are malformed, receiver MUST QUARANTINE (Q120).
-
-### 8.3 Dependency Version Resolution
-
+8.3 Dependency Version Resolution
 Dependency versions MUST be exact.
-
 Version ranges MUST NOT be used.
-
 If a dependency version cannot be resolved exactly, receiver MUST QUARANTINE (Q120).
-
 If multiple versions satisfy the same declared dependency (ambiguity), receiver MUST REJECT.
-
-Tamam. 8.4’ten 9-10-11-12-13-14-15-16-17-18-19-20-21’e kadar hepsini tek parça veriyorum. Bunu 8.3’ün altına yapıştır.
-Md
-Kodu kopyala
-### 8.4 Dependency Snapshot Hash
-
+8.4 Dependency Snapshot Hash
 Receiver MUST compute a dependency_snapshot_hash using canonical JSON encoding (RFC 8785).
-
 The dependency snapshot MUST be represented as:
-
-```json
+Json
+Kodu kopyala
 {
   "dependencies": [
     "spec/core/SEQUENTIAL_LOCK_RULE.md@v1.1",
