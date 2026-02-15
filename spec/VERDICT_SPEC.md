@@ -215,7 +215,14 @@ If dependency declaration is absent:
 
 ### 8.2 Dependency Schema
 
-Dependencies MUST be expressed as an ordered-insensitive list.
+Dependencies MUST be expressed as a machine-readable list.
+
+Dependency list semantics MUST be order-insensitive.
+Receivers MUST NOT treat author-provided list order as meaningful.
+
+Each dependency entry MUST contain:
+- path (string)
+- version (string)
 
 Canonical form MUST be:
 
@@ -225,3 +232,15 @@ dependencies:
     version: v1.0
   - path: spec/core/SEQUENTIAL_LOCK_RULE.md
     version: v1.1
+
+If dependencies exist but are malformed, receiver MUST QUARANTINE (Q120).
+
+### 8.3 Dependency Version Resolution
+
+Dependency versions MUST be exact.
+
+Version ranges MUST NOT be used.
+
+If a dependency version cannot be resolved exactly, receiver MUST QUARANTINE (Q120).
+
+If multiple versions satisfy the same declared dependency (ambiguity), receiver MUST REJECT.
