@@ -1,25 +1,28 @@
 ---
 state: DRAFT
-version: v1
+version: v1.1
 ---
 
 # ISC-CORE ERROR CODES SPEC
 
-This document defines the canonical error and reason code taxonomy for ISC Core.
+This document defines the canonical error / warning / quarantine code contract for ISC Core.
 
 It specifies:
 
-- how reason codes MUST be structured
-- how code namespaces MUST map to verdict classes
-- how deterministic reason_codes MUST be generated
-- how errors MUST be classified to prevent receiver policy drift
+- the canonical namespaces (E / Q / W)
+- deterministic precedence rules
+- stability guarantees (no rename, no semantic drift)
+- minimum required code set
+- how codes affect verdict decisions and stable hashing
 
 This is a protocol governance contract, not an implementation guide.
 
 This document is downstream of:
 
-- spec/core/DOC_FORMAT.md
 - spec/VERDICT_SPEC.md
+- spec/CANONICALIZATION.md
+- spec/EVIDENCE_BLOB.md
+- spec/core/PROTOCOL_MANIFEST.md
 
 ---
 
@@ -29,369 +32,363 @@ ISC Core is treated as a frozen genome.
 
 Therefore:
 
-- error classification MUST be deterministic
-- reason code emission MUST be reproducible
-- code meanings MUST be stable across versions
-- ambiguity MUST be treated as a failure condition
+- all reason codes MUST be deterministic identifiers
+- codes MUST be stable across time and receivers
+- ambiguous interpretation MUST be treated as a failure condition
+- code meaning MUST NOT drift silently
+- codes MUST allow deterministic verdict derivation
 
-This spec exists to prevent:
-
-- inconsistent verdict mappings
-- "receiver-specific error policy"
-- unstable reason_codes ordering
-- non-canonical error naming drift
+This document defines the only allowed canonical reason code system.
 
 ---
 
-## 2. Definitions
+## 2. Scope
 
-### 2.1 Reason Code
+This specification governs:
 
-A reason code is a short canonical identifier representing a specific evaluation outcome.
+- reason code namespaces
+- code formatting rules
+- code precedence and verdict dominance rules
+- required minimal code list
+- compatibility and versioning rules
 
-Reason codes MUST be stable and machine-consumable.
+This specification does NOT define:
 
-### 2.2 Namespace
-
-A namespace is the leading prefix of a reason code.
-
-Namespaces determine the required verdict class.
-
-### 2.3 Reason Object
-
-A reason object is an optional audit-only structured output.
-
-Only reason code strings influence stable hashing.
+- human-readable message formats
+- UI rendering rules
+- receiver logging formats
+- stack traces or debug output fields
 
 ---
 
-## 3. Canonical Namespaces
+## 3. Definitions
 
-Reason codes MUST use exactly one of the following namespaces:
+### 3.1 Reason Code
 
-- `E***` = REJECT (error / invalid)
-- `Q***` = QUARANTINE (determinism incomplete)
-- `W***` = ACCEPT (warning only)
-- `I***` = informational (ACCEPT only, audit-only)
+A reason code is a stable string identifier emitted by a receiver.
 
-No other namespace is allowed.
+A reason code MUST be machine-readable and deterministic.
 
-If an unknown namespace is encountered, receiver MUST REJECT.
+A reason code MUST be stable across receivers.
+
+### 3.2 Reason Object
+
+A reason object is an optional structured diagnostic object that MAY include:
+
+- code
+- message
+- path
+- details
+
+Only code is stable.
+
+All other fields are audit-only.
+
+### 3.3 Code Namespace
+
+A code namespace is the leading letter prefix that defines the class of a code:
+
+- E = Error (REJECT class)
+- Q = Quarantine trigger (QUARANTINE class)
+- W = Warning (ACCEPT class)
 
 ---
 
-## 4. Namespace-to-Verdict Mapping (Hard Rule)
+## 4. Canonical Code Format
 
-### 4.1 Mapping Table
+All reason codes MUST follow one of the following formats:
 
-The following mapping is mandatory:
-
-- `E***` codes MUST imply verdict = REJECT
-- `Q***` codes MUST imply verdict = QUARANTINE
-- `W***` codes MUST imply verdict = ACCEPT
-- `I***` codes MUST imply verdict = ACCEPT
-
-### 4.2 Mixed Code Sets
-
-Receivers MAY emit multiple codes.
-
-When multiple codes exist, the final verdict MUST be the strongest class.
-
-Strength order:
-
-`REJECT > QUARANTINE > ACCEPT`
+- `E<3 digits>`
+- `Q<3 digits>`
+- `W<3 digits>`
 
 Examples:
 
-- codes: `[W010, W020]` => ACCEPT
-- codes: `[Q120, W010]` => QUARANTINE
-- codes: `[E201, Q120]` => REJECT
+- E201
+- Q120
+- W001
 
-Receivers MUST NOT output a verdict inconsistent with the strongest code class.
+Lowercase prefixes are forbidden.
 
----
-
-## 5. Canonical Code Format
-
-### 5.1 Syntax
-
-Reason codes MUST follow:
-
-`<PREFIX><3 digits>`
-
-Where:
-
-- PREFIX is one of: `E`, `Q`, `W`, `I`
-- digits MUST be decimal
-- total length MUST be 4 characters
-
-Examples:
-
-- `E201`
-- `Q130`
-- `W010`
-
-Invalid examples:
-
-- `E20`
-- `ERR201`
-- `q130`
-- `E201A`
-
-If a code is malformed, receiver MUST REJECT.
-
-### 5.2 Case Sensitivity
-
-Codes MUST be uppercase.
-
-Lowercase codes MUST be treated as invalid.
+If a receiver emits a malformed code, receiver MUST REJECT with E001.
 
 ---
 
-## 6. reason_codes Output Requirements
+## 5. Code Semantics by Namespace
 
-### 6.1 reason_codes Set
+### 5.1 E*** (Error)
 
-Receivers MUST emit:
+E*** codes represent deterministic fatal violations.
 
-- `reason_codes` as an array of strings
+If any E*** code exists in normalized reason_codes:
 
-The array MUST contain only valid codes.
+- final verdict MUST be REJECT
 
-### 6.2 Ordering
+### 5.2 Q*** (Quarantine)
 
-`reason_codes` MUST be sorted lexicographically ascending.
+Q*** codes represent deterministic incomplete evaluation conditions.
 
-### 6.3 Duplicate Handling
+If at least one Q*** code exists and no E*** code exists:
 
-Duplicate codes MUST be removed during normalization.
+- final verdict MUST be QUARANTINE
 
-Receivers MUST treat duplicates as a normalization operation, not as a verdict-changing event.
+Q*** MUST only be used for conditions explicitly allowed by VERDICT_SPEC.
 
-After normalization, duplicates MUST NOT remain.
+### 5.3 W*** (Warning)
 
-### 6.4 Empty reason_codes
+W*** codes represent non-fatal diagnostic signals.
 
-If verdict is ACCEPT, reason_codes MAY be empty.
+Warnings MUST NOT prevent ACCEPT.
 
-If verdict is REJECT or QUARANTINE, reason_codes MUST NOT be empty.
+If only W*** codes exist:
 
----
-
-## 7. Reason Objects (Audit-Only)
-
-Receivers MAY emit audit-only reason objects.
-
-If present, each reason object MUST contain:
-
-- `code` (string)
-- `message` (string)
-
-Reason objects MAY contain:
-
-- `path`
-- `details`
-
-Reason objects MUST NOT affect verdict_hash computation.
-
-Receivers MUST NOT include reason objects in VHI hashing.
+- final verdict MUST be ACCEPT
 
 ---
 
-## 8. Canonical Code Registry
+## 6. Precedence Rules
 
-### 8.1 Rule
+Receivers MUST apply the following dominance rule:
 
-The set of valid codes MUST be treated as a closed registry.
+REJECT dominates QUARANTINE dominates ACCEPT.
 
-Receivers MUST NOT invent new codes.
+Therefore:
 
-New codes may only be introduced by updating this document version.
+- If any E*** exists => REJECT
+- Else if any Q*** exists => QUARANTINE
+- Else => ACCEPT (with optional warnings)
 
-### 8.2 Forward Compatibility
-
-If a receiver encounters an unknown code from a newer ruleset:
-
-- in DRAFT: receiver MAY QUARANTINE
-- in HARDENED: receiver MUST QUARANTINE
-- in FROZEN: receiver MUST REJECT
+Receivers MUST NOT override this precedence.
 
 ---
 
-## 9. Canonical Error Codes
+## 7. reason_codes Normalization Rules
 
-This section defines the mandatory reason codes and their canonical meaning.
+### 7.1 Stable Set
 
----
+reason_codes MUST be normalized as follows:
 
-## 10. E-Codes (REJECT)
+- codes MUST be treated as a set
+- duplicates MUST be removed
+- the final set MUST be sorted lexicographically
 
-### E100: ARTIFACT_TYPE_MISSING
+Duplicate presence MUST NOT change the final normalized reason_codes set.
 
-artifact_type is missing or absent.
+### 7.2 Ordering
 
-### E101: ARTIFACT_TYPE_INVALID
+The output reason_codes array MUST be sorted lexicographically.
 
-artifact_type is present but not a valid value.
+Example ordering:
 
-### E110: METADATA_REQUIRED_FIELD_MISSING
+- E101
+- E201
+- Q120
+- Q150
+- W001
 
-A required metadata field is missing.
-
-### E120: DEPENDENCY_DECLARATION_MISSING
-
-Dependency declaration block is missing when required.
-
-### E121: DEPENDENCY_VERSION_INVALID
-
-Dependency version is malformed or invalid.
-
-### E130: DEPENDENCY_CYCLE_DETECTED
-
-A dependency cycle exists.
-
-### E140: RULESET_ID_INVALID
-
-ruleset_id is missing or not canonical.
-
-### E150: CANONICAL_BYTES_INVALID
-
-Canonical byte normalization failed deterministically.
-
-### E160: CANONICAL_PARSE_FAILED
-
-Parsing failed deterministically under canonical parser rules.
-
-### E170: UNKNOWN_NAMESPACE
-
-A reason code namespace is invalid or unknown.
-
-### E180: OUTPUT_SCHEMA_INVALID
-
-Receiver output is missing mandatory stable fields.
-
-### E190: UNKNOWN_FAILURE_CLASSIFICATION
-
-Receiver encountered an error but could not classify it.
-
-This code MUST only be used if no other E-code applies.
-
-### E200: TTL_EXPIRED
-
-Artifact TTL expired under an approved time source.
-
-### E210: VERSION_AMBIGUITY
-
-Multiple versions satisfy a dependency, producing ambiguity.
-
-### E220: MULTIPLE_METADATA_SOURCES
-
-Artifact contains multiple competing metadata declarations.
-
-### E230: NON_CANONICAL_FORMAT_VIOLATION
-
-Artifact violates canonical formatting rules defined by DOC_FORMAT.
+Receivers MUST NOT preserve original emission order.
 
 ---
 
-## 11. Q-Codes (QUARANTINE)
+## 8. Stable vs Audit Fields
 
-### Q100: TIME_SOURCE_MISSING_FOR_TIME_SENSITIVE
+Only reason_codes MUST affect stable verdict hashing.
 
-time_sensitive = true and ttl_seconds exists, but time_source_type is missing.
+Any of the following MUST be treated as audit-only:
 
-### Q110: TIME_SOURCE_UNVERIFIABLE
+- reason message strings
+- file paths
+- section pointers
+- stack traces
+- exception names
+- receiver-local debug details
 
-Time source is present but cannot be verified deterministically.
-
-### Q120: DEPENDENCY_RESOLUTION_INCOMPLETE
-
-Dependency snapshot cannot be resolved deterministically.
-
-### Q130: REORDER_OUT_OF_ORDER
-
-Artifact violates reorder constraints.
-
-### Q140: RECEIVER_RESOURCE_LIMIT_EXPLICIT
-
-Receiver explicitly hit a resource limit (memory, CPU, disk, timeout).
-
-### Q150: METADATA_LOCATION_INVALID
-
-Metadata exists but is not found at canonical location.
-
-### Q160: CANONICAL_PARSE_UNSAFE_BUT_RECOVERABLE
-
-Artifact parsing is unsafe or ambiguous but may be recoverable.
+If any audit-only content affects verdict_hash, receiver is non-compliant.
 
 ---
 
-## 12. W-Codes (ACCEPT WITH WARNING)
+## 9. Reserved Code Ranges
 
-### W010: OPTIONAL_FIELD_MISSING
+To prevent semantic collision, the following ranges are reserved.
 
-Optional field missing (allowed under current maturity state).
+### 9.1 E000–E099 (Meta / Receiver Compliance)
 
-### W020: LEGACY_FIELD_USED
+Reserved for receiver-level violations.
 
-Legacy field detected.
+These codes indicate the receiver cannot comply deterministically.
 
-### W030: NON_FATAL_FORMAT_DEVIATION
+### 9.2 E100–E199 (Canonicalization / Parsing)
 
-Format deviation detected but permitted in DRAFT mode.
+Reserved for DOC_FORMAT and CANONICALIZATION failures.
+
+### 9.3 E200–E299 (Dependency / Locking)
+
+Reserved for dependency resolution, cycle detection, and state locking.
+
+### 9.4 E300–E399 (Evidence Failures)
+
+Reserved for evidence manifest and evidence integrity failures.
+
+### 9.5 E400–E499 (Verdict Output Contract)
+
+Reserved for stable hashing / output schema violations.
+
+### 9.6 Q100–Q199 (Canonical QUARANTINE Triggers)
+
+Reserved for the closed-set QUARANTINE trigger codes defined by VERDICT_SPEC.
+
+### 9.7 W000–W099 (Non-Fatal Governance Warnings)
+
+Reserved for warning-level signals.
 
 ---
 
-## 13. I-Codes (INFORMATIONAL)
+## 10. Minimal Required Canonical Codes
 
-### I001: RECEIVER_VERSION_TAG
+A compliant receiver MUST support the following minimal code set.
 
-Receiver emitted a version tag.
+### 10.1 Meta / Receiver Compliance
 
-### I010: AUDIT_TRACE_AVAILABLE
+- E000: UNKNOWN_REASON_CODE
+- E001: MALFORMED_REASON_CODE
+- E010: NON_DETERMINISTIC_EVALUATION_DETECTED
 
-Audit trace exists.
+### 10.2 Canonicalization / Parsing Errors
 
-I-codes MUST NOT be included in stable reason_codes unless explicitly allowed by VERDICT_SPEC.
+- E110: INVALID_UTF8
+- E111: NULL_BYTE_IN_TEXT
+- E120: CANONICALIZATION_FAILED
+- E130: PATH_NOT_CANONICAL
+- E140: YAML_FRONTMATTER_INVALID
+- E150: MARKDOWN_PARSE_FAILED
+
+### 10.3 Metadata / Manifest Errors
+
+- E160: METADATA_MISSING_REQUIRED_FIELD
+- E161: METADATA_LOCATION_INVALID
+- E170: ARTIFACT_TYPE_MISSING
+- E171: ARTIFACT_TYPE_UNKNOWN
+
+### 10.4 Dependency Errors
+
+- E200: DEPENDENCY_DECLARATION_MISSING
+- E201: DEPENDENCY_VERSION_UNRESOLVABLE
+- E202: DEPENDENCY_AMBIGUOUS_VERSION
+- E210: DEPENDENCY_CYCLE_DETECTED
+- E220: STATE_LOCK_RULE_VIOLATION
+
+### 10.5 Evidence Errors
+
+- E300: EVIDENCE_MANIFEST_MALFORMED
+- E301: EVIDENCE_ID_INVALID_FORMAT
+- E302: EVIDENCE_HASH_MISMATCH
+- E303: EVIDENCE_SIZE_MISMATCH
+- E310: DUPLICATE_EVIDENCE_ID
+
+### 10.6 Verdict Output Errors
+
+- E400: VERDICT_OUTPUT_NOT_JSON
+- E410: VERDICT_HASH_INVALID
+- E420: VERDICT_HASH_INPUT_INVALID
+- E430: RULESET_ID_INVALID_FORMAT
+
+### 10.7 Quarantine Trigger Codes (Closed Set)
+
+These MUST match VERDICT_SPEC.
+
+- Q100: TIME_SOURCE_MISSING_FOR_TIME_SENSITIVE
+- Q110: TIME_SOURCE_UNVERIFIABLE
+- Q120: DEPENDENCY_RESOLUTION_INCOMPLETE
+- Q130: REORDER_OUT_OF_ORDER
+- Q140: RECEIVER_RESOURCE_LIMIT_EXPLICIT
+- Q150: METADATA_LOCATION_INVALID
+- Q160: CANONICAL_PARSE_UNSAFE_BUT_RECOVERABLE
+
+### 10.8 Warning Codes
+
+- W001: NON_FATAL_SCHEMA_DEVIATION
+- W010: UNUSED_METADATA_FIELD_PRESENT
+- W020: OPTIONAL_FIELD_MISSING
 
 ---
 
-## 14. Canonical Trigger Mapping Rules
+## 11. Code Emission Rules
 
-Receivers MUST map evaluation failures to reason codes deterministically.
+### 11.1 Mandatory Code Requirement
 
-### 14.1 Priority Rule
+If a receiver produces REJECT, it MUST emit at least one E*** code.
 
-If multiple codes apply, receiver MUST include all relevant codes.
+If a receiver produces QUARANTINE, it MUST emit at least one Q*** code.
 
-The strongest code class MUST dominate verdict.
+If a receiver produces ACCEPT with warnings, it MUST emit at least one W*** code.
 
-### 14.2 Classification Rule
+If a receiver produces ACCEPT with no warnings, reason_codes MAY be empty.
 
-Receivers MUST NOT collapse errors into generic codes if a specific code exists.
+### 11.2 Namespace Consistency
 
-Example:
+Receivers MUST ensure:
 
-- dependency cycle => MUST emit `E130`, not `E190`
+- REJECT verdict MUST NOT be emitted without E*** codes
+- QUARANTINE verdict MUST NOT be emitted without Q*** codes
+- ACCEPT verdict MUST NOT include any E*** or Q*** codes
 
-### 14.3 Unknown Failure
+If inconsistency is detected, receiver MUST REJECT with E010.
 
-If receiver cannot classify a failure:
+---
 
-- MUST emit `E190`
-- MUST set verdict = REJECT
+## 12. Stable Meaning and No-Rename Rule
+
+Reason code meanings MUST NOT be changed silently.
+
+Once introduced:
+
+- codes MUST NOT be renamed
+- codes MUST NOT be reassigned to a different meaning
+- codes MUST NOT change namespace class
+
+If semantic meaning must change:
+
+- a new code MUST be introduced
+- the old code MUST remain reserved
+- ruleset_id MUST change
+
+---
+
+## 13. Backward Compatibility
+
+Frozen code meanings MUST remain valid forever.
+
+Receivers MUST continue to recognize previously frozen codes.
+
+Unknown codes MUST be treated as a fatal error unless explicitly permitted by a downstream version bump.
+
+If a receiver encounters an unknown code:
+
+- receiver MUST REJECT with E000
+
+---
+
+## 14. Deterministic Mapping Requirement
+
+Given identical evaluation inputs, compliant receivers MUST produce identical:
+
+- verdict
+- reason_codes set
+- reason_codes ordering
+
+If two receivers disagree on code emission, determinism is violated.
 
 ---
 
 ## 15. Compliance Requirements
 
-A receiver is compliant only if it:
+A receiver is compliant with this specification only if it:
 
-- emits only codes defined in this document
-- enforces namespace verdict mapping
-- sorts reason_codes lexicographically
-- removes duplicates deterministically
-- never allows audit-only reason objects to influence verdict_hash
+- enforces canonical code format
+- enforces deterministic sorting of reason_codes
+- enforces namespace dominance rules
+- never allows audit-only data to influence stable hashing
+- supports the minimal required code set
 
 Any deviation MUST be treated as a governance violation.
 
@@ -399,7 +396,8 @@ Any deviation MUST be treated as a governance violation.
 
 ## 16. Final Rule
 
-If a condition is not explicitly assigned to a code in this registry, the receiver MUST treat it as:
+Any ambiguity in reason code meaning MUST be treated as a failure condition.
 
-- QUARANTINE only if it matches a known Q-trigger
-- otherwise REJECT (E190)
+In DRAFT state, receivers MAY QUARANTINE.
+
+In HARDENED and FROZEN state, ambiguity MUST produce REJECT.
