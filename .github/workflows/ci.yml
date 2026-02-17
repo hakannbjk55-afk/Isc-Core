@@ -1,0 +1,12 @@
+name: ci
+on:
+  push:
+  pull_request:
+
+jobs:
+  vectors:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run vectors
+        run: python3 tools/verify_vectors.py
