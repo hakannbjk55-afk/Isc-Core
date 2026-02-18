@@ -1,0 +1,5 @@
+{
+  "format": "isc_report_v1",
+  "meta": { "case": "invalid_errors_not_list" },
+  "errors": "not-a-list"
+}
