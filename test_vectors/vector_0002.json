@@ -1,0 +1,7 @@
+{
+  "id": "vector_0002",
+  "case": "key_order_stability",
+  "input_json": "{\"b\":2,\"a\":1}",
+  "expected_canonical_json": "{\"a\":1,\"b\":2}\n",
+  "notes": "object key ordering determinism; later bind to spec/core/CANONICALIZATION.md"
+}

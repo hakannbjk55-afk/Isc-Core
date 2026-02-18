@@ -4,6 +4,10 @@
     {
       "path": "test_vectors/vector_0001.json",
       "sha256": "5cc0268af57ddf3b96d2468ad46a32a939e9066a4463d1e5c785f9fc516f62cd"
+    },
+    {
+      "path": "test_vectors/vector_0002.json",
+      "sha256": "858e57bfb1540fa9500aa15d6d280518f44b85ceaf283d9bfb89cff2e5436f2a"
     }
   ]
 }
