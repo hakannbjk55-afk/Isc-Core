@@ -1,4 +1,6 @@
 #!/data/data/com.termux/files/usr/bin/bash
+bash tools/phi_tripwire.sh
+
 set -e
 
 REPORT_PATH="artifacts/ci_report.json"
