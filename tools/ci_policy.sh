@@ -120,3 +120,6 @@ else
   echo "[CI] WARNING: tools/vector_verifier.py not found -> tolerated (RECOVERY)"
   echo "[CI][TELEMETRY] missing_vector_verifier=1"
 fi
+
+echo "[CI] Checking deterministic CI report hash (CI_REPORT_V1)"
+python tools/ci_report_hash_check.py
