@@ -7,6 +7,10 @@ from typing import Any, Dict, List
 
 MANIFEST_PATH = os.path.join("test_vectors", "manifest.json")
 
+def die(msg: str, code: int = 1) -> None:
+    print(f"[VECTOR] ERROR: {msg}")
+    raise SystemExit(code)
+
 def sha256_file(path: str) -> str:
     h = hashlib.sha256()
     with open(path, "rb") as f:
@@ -14,9 +18,11 @@ def sha256_file(path: str) -> str:
             h.update(chunk)
     return h.hexdigest()
 
-def die(msg: str, code: int = 1) -> None:
-    print(f"[VECTOR] ERROR: {msg}")
-    sys.exit(code)
+def normalize_path(p: str) -> str:
+    p2 = os.path.normpath(p).replace("\\", "/")
+    if p2.startswith("../") or p2 == "..":
+        die(f"Disallowed path traversal: {p}")
+    return p2
 
 def load_manifest() -> Dict[str, Any]:
     if not os.path.isfile(MANIFEST_PATH):
@@ -35,11 +41,53 @@ def load_manifest() -> Dict[str, Any]:
         die("Manifest 'vectors' must be a non-empty array")
     return m
 
-def normalize_path(p: str) -> str:
-    p2 = os.path.normpath(p).replace("\\", "/")
-    if p2.startswith("../") or p2.startswith("..\\") or p2 == "..":
-        die(f"Disallowed path traversal: {p}")
-    return p2
+def canonicalize(obj: Any) -> str:
+    # Minimal canonical JSON (placeholder until spec binding):
+    # - sorted keys
+    # - no spaces
+    # - UTF-8
+    # - newline at end
+    return json.dumps(obj, sort_keys=True, separators=(",", ":"), ensure_ascii=False) + "\n"
+
+def parse_input_json(value: Any) -> Any:
+    # vectors may store input_json as an object OR as a JSON string
+    if isinstance(value, str):
+        return json.loads(value)
+    return value
+
+def check_vector_schema(path: str) -> None:
+    # Optional semantic checks: if expected_canonical_json exists, validate it.
+    with open(path, "r", encoding="utf-8") as f:
+        try:
+            v = json.load(f)
+        except Exception as e:
+            die(f"Invalid JSON in vector file {path}: {e}")
+
+    if not isinstance(v, dict):
+        die(f"Vector file {path} must be an object")
+
+    if "expected_canonical_json" in v:
+        exp = v["expected_canonical_json"]
+        if not isinstance(exp, str):
+            die(f"{path}: expected_canonical_json must be a string")
+        if not exp.endswith("\n"):
+            die(f"{path}: expected_canonical_json MUST end with newline")
+        # No leading/trailing whitespace beyond final newline
+        if exp[:-1] != exp[:-1].strip():
+            die(f"{path}: expected_canonical_json MUST NOT have leading/trailing spaces")
+        src = v.get("input_json")
+        if src is None:
+            die(f"{path}: missing input_json for canonical check")
+        try:
+            obj = parse_input_json(src)
+        except Exception as e:
+            die(f"{path}: input_json parse failed: {e}")
+        got = canonicalize(obj)
+        if got != exp:
+            print(f"[VECTOR] FAIL: canonical mismatch: {path}")
+            print(f"         expected: {exp!r}")
+            print(f"         got:      {got!r}")
+            raise SystemExit(1)
 
 def main() -> int:
     update = ("--update" in sys.argv)
@@ -48,9 +96,8 @@ def main() -> int:
 
     seen = set()
     had_error = False
+    paths: List[str] = []
 
-    # basic sanity: stable ordering recommended
-    paths = []
     for i, v in enumerate(vecs):
         if not isinstance(v, dict):
             die(f"vectors[{i}] must be an object")
@@ -66,7 +113,6 @@ def main() -> int:
         seen.add(path)
         paths.append(path)
 
-    # warn if not sorted (doesn't fail; you can make it fail later)
     if paths != sorted(paths):
         print("[VECTOR] WARNING: manifest vectors are not sorted by path")
 
@@ -90,8 +136,11 @@ def main() -> int:
             print(f"         expected: {exp}")
             print(f"         got:      {got}")
             had_error = True
-        else:
-            print(f"[VECTOR] OK:   {path}")
+            continue
+
+        # Semantic checks after hash match
+        check_vector_schema(path)
+        print(f"[VECTOR] OK:   {path}")
 
     if update:
         with open(MANIFEST_PATH, "w", encoding="utf-8") as f:
