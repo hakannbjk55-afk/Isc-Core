@@ -1,2 +1,5 @@
 isc_verify/target/
 isc_verify/Cargo.lock
+
+# CI outputs (local)
+artifacts/
