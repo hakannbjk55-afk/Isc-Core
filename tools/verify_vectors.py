@@ -27,11 +27,19 @@ def main() -> int:
             fail(f"case missing input.json: {c}")
 
         obj = json.loads(inp.read_text(encoding="utf-8"))
-        if obj.get("format") != "isc_report_v1":
-            fail(f"{c}: wrong format (expected isc_report_v1)")
 
-        if "errors" not in obj or not isinstance(obj["errors"], list):
-            fail(f"{c}: errors must be list")
+        # valid_minimal MUST match the schema basics
+        if c == "valid_minimal":
+            if obj.get("format") != "isc_report_v1":
+                fail(f"{c}: wrong format (expected isc_report_v1)")
+            if "errors" not in obj or not isinstance(obj["errors"], list):
+                fail(f"{c}: errors must be list")
+
+        # invalid vectors: only require that JSON parses and has meta.case
+        else:
+            meta = obj.get("meta")
+            if not isinstance(meta, dict) or meta.get("case") != c:
+                fail(f"{c}: meta.case must equal case name")
 
     print("OK: vectors verified")
     return 0
