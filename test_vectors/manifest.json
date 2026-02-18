@@ -8,6 +8,10 @@
     {
       "path": "test_vectors/vector_0002.json",
       "sha256": "858e57bfb1540fa9500aa15d6d280518f44b85ceaf283d9bfb89cff2e5436f2a"
+    },
+    {
+      "path": "test_vectors/vector_0003.json",
+      "sha256": "1cc28675a8977a7065acc823f2e0337a2c71769795426ec4b107d6ce654017c4"
     }
   ]
 }

@@ -1,0 +1,7 @@
+{
+  "id": "vector_0003",
+  "case": "whitespace_and_newline_policy",
+  "input_json": "{\"a\":1,\"b\":2}",
+  "expected_canonical_json": "{\"a\":1,\"b\":2}\n",
+  "notes": "canonical output MUST end with newline and contain no extra spaces"
+}
