@@ -1,22 +1,11 @@
-# ISC Core
+# ISC-CORE
 
-ISC Core is a deterministic verification core for ISC report bundles.
+Court-grade specification repository for ISC Core.
 
-This repository contains:
-- `isc_verify/` : verifier binary (Rust)
-- `vectors/` : golden test vectors (valid/invalid cases)
-- `tools/` : vector verification utilities
+## Entry point
+Start here: `spec/INDEX.md`
 
-## Requirements
-Python 3.10+ and Rust (Cargo).
+## Structure
+- `spec/core/` = core normative rules (canonicalization, doc format, protocol manifest)
+- `spec/`      = protocol specs built on top of core
 
-## Quick Start
-git clone https://github.com/hakannbjk55-afk/Isc-Core.git
-cd Isc-Core
-python3 tools/verify_vectors.py
-
-## Build Verifier
-cd isc_verify && cargo build --release && ./target/release/isc_verify --version
-
-## Notes
-Golden vectors are the canonical regression baseline. Any format/schema change MUST preserve determinism and ship updated vectors.
