@@ -93,6 +93,8 @@ JSON
 on_exit() {
   code="$?"
   write_report "$code"
+  echo "[CI] Checking deterministic CI report hash (CI_REPORT_V1)"
+  python3 tools/ci_report_hash_check.py
   exit "$code"
 }
 trap on_exit EXIT
