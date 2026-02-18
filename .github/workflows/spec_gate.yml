@@ -1,0 +1,42 @@
+name: SpecGate
+
+on:
+  push:
+    paths:
+      - "spec/**"
+      - ".github/workflows/spec_gate.yml"
+  pull_request:
+    paths:
+      - "spec/**"
+      - ".github/workflows/spec_gate.yml"
+
+jobs:
+  spec-gate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Verify required spec files exist
+        run: |
+          test -f spec/INDEX.md
+          test -f spec/core/CANONICALIZATION.md
+          test -f spec/VERDICT_SPEC.md
+          test -f spec/EVIDENCE_BLOB.md
+          test -f spec/ERROR_CODES.md
+
+      - name: Validate INDEX links (basic)
+        run: |
+          set -e
+
+          echo "[SpecGate] Checking links in spec/INDEX.md"
+
+          grep -oE '\([a-zA-Z0-9_./-]+\.md\)' spec/INDEX.md | tr -d '()' | while read -r f; do
+            if [ ! -f "spec/$f" ]; then
+              echo "Missing file referenced in INDEX: spec/$f"
+              exit 1
+            fi
+          done
+
+          echo "[SpecGate] OK"
