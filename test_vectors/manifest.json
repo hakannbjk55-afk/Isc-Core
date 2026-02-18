@@ -3,7 +3,7 @@
   "vectors": [
     {
       "path": "test_vectors/vector_0001.json",
-      "sha256": "78978afe209274a20fd0bbd3ae46f29e97fe9ed719677eab6c3bf111895d781f"
+      "sha256": "5cc0268af57ddf3b96d2468ad46a32a939e9066a4463d1e5c785f9fc516f62cd"
     }
   ]
 }

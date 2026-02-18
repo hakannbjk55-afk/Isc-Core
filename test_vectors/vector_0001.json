@@ -1,5 +1,7 @@
 {
   "id": "vector_0001",
-  "note": "placeholder payload; will be replaced by canonical bytes vectors",
-  "data": {"a": 1, "b": 2}
+  "case": "jcs_minimal_object_order",
+  "input_json": {"b": 2, "a": 1},
+  "expected_canonical_json": "{\"a\":1,\"b\":2}\n",
+  "notes": "placeholder canonical form; later we will bind to spec/core/CANONICALIZATION.md rules"
 }
