@@ -1,5 +1,4 @@
-
-  "format": "isc_report_v1",
+{
   "meta": { "case": "invalid_missing_format" },
   "errors": []
 }
