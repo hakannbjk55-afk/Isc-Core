@@ -1,4 +1,9 @@
 {
   "version": "v1",
-  "cases": ["valid_minimal"]
+  "cases": [
+    "valid_minimal",
+    "invalid_missing_format",
+    "invalid_errors_not_list",
+    "invalid_unknown_format"
+  ]
 }
