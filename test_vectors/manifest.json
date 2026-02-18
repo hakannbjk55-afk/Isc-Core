@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "vectors": [
+    {
+      "path": "test_vectors/vector_0001.json",
+      "sha256": "78978afe209274a20fd0bbd3ae46f29e97fe9ed719677eab6c3bf111895d781f"
+    }
+  ]
+}
