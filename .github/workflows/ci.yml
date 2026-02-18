@@ -8,7 +8,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Run vector verifier
+
+      - name: Run vector verifier (policy)
         run: |
           set -e
           sh tools/ci_policy.sh
+
+      - name: Upload CI report artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ci-report
+          path: artifacts/ci_report.json
+          if-no-files-found: error
+          retention-days: 30
