@@ -1,4 +1,4 @@
-# # ISC Core
+# ISC Core
 
 ISC Core is a deterministic verification core for ISC report bundles.
 
@@ -8,10 +8,12 @@ This repository contains:
 - `tools/` : vector verification utilities
 
 ## Requirements
-Python 3.10+ and Rust (cargo).
+Python 3.10+ and Rust (Cargo).
 
 ## Quick Start
-git clone https://github.com/hakannbjk55-afk/Isc-Core.git && cd Isc-Core && python3 tools/verify_vectors.py
+git clone https://github.com/hakannbjk55-afk/Isc-Core.git
+cd Isc-Core
+python3 tools/verify_vectors.py
 
 ## Build Verifier
 cd isc_verify && cargo build --release && ./target/release/isc_verify --version
