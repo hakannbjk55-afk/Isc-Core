@@ -7,7 +7,7 @@ jobs:
   vectors:
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4.1.1
 
       - name: Run vector verifier (policy)
         run: |
@@ -16,7 +16,7 @@ jobs:
 
       - name: Upload CI report artifact
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v4.4.3
         with:
           name: ci-report
           path: artifacts/ci_report.json
