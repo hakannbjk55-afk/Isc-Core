@@ -1,0 +1,23 @@
+{
+  "timestamp_utc": "2026-02-18T19:03:43Z",
+  "exit_code": 0,
+  "phi_health_score": 100.0,
+  "counters": {
+    "gate_pass": 1,
+    "gate_fail": 0,
+    "recovery": 0
+  },
+  "checks": {
+    "vector_verifier": {
+      "present": 1,
+      "ran": 1,
+      "ok": 1,
+      "missing": 0
+    },
+    "manifest": {
+      "present": 1,
+      "vectors_count": 1,
+      "sha256": "25e9128848ba504cb9d8b528f6a927e9ce788e5435d9da673642248d37ed8d46"
+    }
+  }
+}

@@ -1,51 +1,71 @@
-#!/usr/bin/env sh
-set -u
+#!/data/data/com.termux/files/usr/bin/bash
+set -e
 
-REPORT_DIR="artifacts"
-REPORT_PATH="${REPORT_DIR}/ci_report.json"
+REPORT_PATH="artifacts/ci_report.json"
+mkdir -p artifacts
 
-mkdir -p "$REPORT_DIR"
+timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
 gate_pass=0
 gate_fail=0
 recovery=0
+
 verifier_present=0
 verifier_ran=0
 verifier_ok=0
 verifier_missing=0
 
-started_at_utc="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+manifest_present=0
+manifest_vectors=0
+manifest_sha256=""
+
+calc_phi() {
+  total=$((gate_pass + gate_fail + recovery))
+  if [ "$total" -eq 0 ]; then
+    echo "0.0"
+  else
+    python3 - <<PY
+total=$total
+gate=$gate_pass
+print(round((gate/total)*100, 2))
+PY
+  fi
+}
+
+sha256_file() {
+  python3 - <<PY
+import hashlib, sys
+p="test_vectors/manifest.json"
+h=hashlib.sha256()
+with open(p,"rb") as f:
+    h.update(f.read())
+print(h.hexdigest())
+PY
+}
+
+count_vectors() {
+  python3 - <<PY
+import json
+m=json.load(open("test_vectors/manifest.json","r",encoding="utf-8"))
+print(len(m.get("vectors",[])))
+PY
+}
 
 write_report() {
-  exit_code="$1"
-  finished_at_utc="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+  code="$1"
+  phi_score=$(calc_phi)
 
-  total=$((gate_pass + gate_fail + recovery))
-  if [ "$total" -le 0 ]; then total=1; fi
-
-  phi_score="$(awk -v gp="$gate_pass" -v r="$recovery" -v t="$total" 'BEGIN { printf "%.2f", 100.0 * ((gp*0.618) + (r*0.382)) / t }')"
-
-  sha="${GITHUB_SHA:-unknown}"
-  run_id="${GITHUB_RUN_ID:-unknown}"
-  run_number="${GITHUB_RUN_NUMBER:-unknown}"
-  repo="${GITHUB_REPOSITORY:-unknown}"
+  if [ -f test_vectors/manifest.json ]; then
+    manifest_present=1
+    manifest_vectors=$(count_vectors)
+    manifest_sha256=$(sha256_file test_vectors/manifest.json)
+  fi
 
   cat > "$REPORT_PATH" <<JSON
 {
-  "meta": {
-    "repo": "$repo",
-    "sha": "$sha",
-    "run_id": "$run_id",
-    "run_number": "$run_number",
-    "started_at_utc": "$started_at_utc",
-    "finished_at_utc": "$finished_at_utc",
-    "exit_code": $exit_code
-  },
-  "phi": {
-    "gate_weight": 0.618,
-    "recovery_weight": 0.382,
-    "score": $phi_score
-  },
+  "timestamp_utc": "$timestamp",
+  "exit_code": $code,
+  "phi_health_score": $phi_score,
   "counters": {
     "gate_pass": $gate_pass,
     "gate_fail": $gate_fail,
@@ -57,6 +77,11 @@ write_report() {
       "ran": $verifier_ran,
       "ok": $verifier_ok,
       "missing": $verifier_missing
+    },
+    "manifest": {
+      "present": $manifest_present,
+      "vectors_count": $manifest_vectors,
+      "sha256": "$manifest_sha256"
     }
   }
 }
@@ -79,10 +104,16 @@ if [ -f tools/vector_verifier.py ]; then
   echo "[CI] Found tools/vector_verifier.py -> running (GATE)"
   python3 --version || true
   verifier_ran=1
-  python3 tools/vector_verifier.py
-  verifier_ok=1
-  gate_pass=1
-  echo "[CI] Vector verifier OK"
+
+  if python3 tools/vector_verifier.py; then
+    verifier_ok=1
+    gate_pass=1
+    echo "[CI] Vector verifier OK"
+  else
+    gate_fail=1
+    echo "[CI] Vector verifier FAILED"
+    exit 1
+  fi
 else
   verifier_missing=1
   recovery=1
