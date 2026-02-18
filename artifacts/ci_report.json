@@ -1,5 +1,5 @@
 {
-  "timestamp_utc": "2026-02-18T19:03:43Z",
+  "timestamp_utc": "2026-02-18T19:31:01Z",
   "exit_code": 0,
   "phi_health_score": 100.0,
   "counters": {
@@ -16,8 +16,8 @@
     },
     "manifest": {
       "present": 1,
-      "vectors_count": 1,
-      "sha256": "25e9128848ba504cb9d8b528f6a927e9ce788e5435d9da673642248d37ed8d46"
+      "vectors_count": 2,
+      "sha256": "e8e2547ec3b91dfe2da0f909cba153cc04084154d873e861d9dcebfb75ac4474"
     }
   }
 }
