@@ -1,0 +1,7 @@
+{
+  "id": "vector_0007",
+  "description": "edge case: invalid JSON - trailing comma",
+  "input": "{\"key\": \"value\",}",
+  "expected": "FAIL",
+  "error_type": "INVALID_JSON"
+}
