@@ -12,6 +12,14 @@
     {
       "path": "test_vectors/vector_0003.json",
       "sha256": "1cc28675a8977a7065acc823f2e0337a2c71769795426ec4b107d6ce654017c4"
+    },
+    {
+      "path": "test_vectors/vector_0004.json",
+      "sha256": "19fa019c2d7081e3c22de5a7ff06d6cde7d6139ac37ac4d4d7d4a18a28047d24"
+    },
+    {
+      "path": "test_vectors/vector_0005.json",
+      "sha256": "545609ee7585e32214a46b854ceadda80ba6c4acfe9b85692f990b2744473a6e"
     }
   ]
 }
