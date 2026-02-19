@@ -1,15 +1,16 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Truth Layer paths where phi must never appear
 FORBIDDEN_PATHS=(
   "spec/core"
   "core"
 )
 
-PATTERN="\bphi\b|1\.618|1\.618033|61\.8|38\.2"
+# Phi-related forbidden tokens (strict)
+PATTERN="\\bphi\\b|1\\.618|1\\.618033|61\\.8|38\\.2"
 
 hit=0
+
 for p in "${FORBIDDEN_PATHS[@]}"; do
   if [ -d "$p" ]; then
     if rg -n -i "$PATTERN" "$p" >/dev/null 2>&1; then
@@ -21,7 +22,7 @@ for p in "${FORBIDDEN_PATHS[@]}"; do
 done
 
 if [ "$hit" -ne 0 ]; then
-  exit 9
+  exit 61
 fi
 
 echo "[PHI_TRIPWIRE] OK"
