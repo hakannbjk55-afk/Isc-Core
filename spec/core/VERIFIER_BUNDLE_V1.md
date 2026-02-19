@@ -10,7 +10,7 @@ The bundle MUST be self-contained and MUST run without network access.
 The Verifier Bundle v1 MUST include the following files:
 
 - tools/verify_evidence_pack_v1.sh
-- tools/ci_report_hash_check.py
+- tools/ci_report_hash_v1.py
 - spec/core/CI_REPORT_HASH_V1.md
 - spec/EVIDENCE_PACK.md
 - spec/core/VERSION
@@ -21,7 +21,6 @@ rebuilding the bundle from the same repository state MUST produce identical byte
 
 ## Bundle identity
 The bundle identity MUST be defined by:
-
 - bundle tarball SHA-256
 - a SHA256SUMS file inside the bundle
 
@@ -32,7 +31,6 @@ Given:
 - evidence_pack_v1.sha256
 
 A verifier MUST be able to run:
-
 - verify_evidence_pack_v1.sh evidence_pack_v1.tar evidence_pack_v1.sha256
 
 and obtain a deterministic PASS/FAIL result.
