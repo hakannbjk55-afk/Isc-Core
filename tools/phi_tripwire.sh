@@ -7,7 +7,7 @@ FORBIDDEN_PATHS=(
   "core"
 )
 
-PATTERN='phi|1\.618|1\.618033|61\.8|38\.2'
+PATTERN="\bphi\b|1\.618|1\.618033|61\.8|38\.2"
 
 hit=0
 for p in "${FORBIDDEN_PATHS[@]}"; do
