@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+OUT_DIR="artifacts"
+OUT_TAR="${OUT_DIR}/evidence_pack_v1.tar"
+OUT_SHA="${OUT_DIR}/evidence_pack_v1.sha256"
+TMP_TAR="${OUT_TAR}.tmp"
+TMP_SHA="${OUT_SHA}.tmp"
+
+mkdir -p "${OUT_DIR}"
+
+FILES=(
+  "artifacts/ci_report.json"
+  "spec/core/VERSION"
+  "test_vectors/manifest.json"
+  "tools/ci_policy.sh"
+  "tools/version_gate.sh"
+  "tools/phi_tripwire.sh"
+)
+
+while IFS= read -r f; do
+  FILES+=("$f")
+done < <(find test_vectors -maxdepth 1 -type f -name 'vector_*.json' | LC_ALL=C sort)
+
+for f in "${FILES[@]}"; do
+  if [ ! -f "$f" ]; then
+    echo "[EVIDENCE_PACK] Missing required file: $f" >&2
+    exit 71
+  fi
+done
+
+LC_ALL=C tar \
+  --sort=name \
+  --numeric-owner --owner=0 --group=0 \
+  --mtime='UTC 1970-01-01' \
+  --pax-option=exthdr.name=%d/PaxHeaders/%f,delete=atime,delete=ctime \
+  -cf "${TMP_TAR}" \
+  "${FILES[@]}"
+
+sha256sum "${TMP_TAR}" > "${TMP_SHA}"
+mv -f "${TMP_TAR}" "${OUT_TAR}"
+mv -f "${TMP_SHA}" "${OUT_SHA}"
+
+echo "[EVIDENCE_PACK] Wrote: ${OUT_TAR}"
+echo "[EVIDENCE_PACK] SHA256: $(cat "${OUT_SHA}")"

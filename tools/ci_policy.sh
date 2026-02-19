@@ -99,6 +99,8 @@ on_exit() {
   write_report "$code"
   echo "[CI] Checking deterministic CI report hash (CI_REPORT_V1)"
   python3 tools/ci_report_hash_check.py
+echo "[CI] Building Evidence Pack v1"
+bash tools/build_evidence_pack_v1.sh
   exit "$code"
 }
 trap on_exit EXIT
