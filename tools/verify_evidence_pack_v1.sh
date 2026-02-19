@@ -1,41 +1,32 @@
-#!/usr/bin/env bash
+#!/bin/bash
+# verify_evidence_pack_v1.sh
+# Usage: bash verify_evidence_pack_v1.sh evidence_pack_v1.tar evidence_pack_v1.sha256
 set -euo pipefail
 
-PACK_TAR="${1:-}"
-PACK_SHA="${2:-}"
+TAR="${1:-}"
+SHA="${2:-}"
 
-if [ -z "$PACK_TAR" ] || [ -z "$PACK_SHA" ]; then
-  echo "usage: verify_evidence_pack_v1.sh <evidence_pack_v1.tar> <evidence_pack_v1.sha256>"
-  exit 2
+if [[ -z "$TAR" || -z "$SHA" ]]; then
+  echo "[VERIFY] FAIL: usage: verify_evidence_pack_v1.sh <pack.tar> <pack.sha256>"
+  exit 1
 fi
 
-if [ ! -f "$PACK_TAR" ]; then
-  echo "[VERIFY] ERROR: pack tar not found: $PACK_TAR"
-  exit 3
+echo "[VERIFY] Checking pack integrity..."
+sha256sum -c "$SHA" || { echo "[VERIFY] FAIL: pack hash mismatch"; exit 1; }
+
+echo "[VERIFY] Extracting manifest..."
+TMPDIR=$(mktemp -d)
+trap "rm -rf $TMPDIR" EXIT
+tar -xf "$TAR" -C "$TMPDIR"
+
+MANIFEST="$TMPDIR/artifacts/evidence_pack_manifest_v1.sha256"
+if [[ ! -f "$MANIFEST" ]]; then
+  echo "[VERIFY] FAIL: manifest not found inside pack"
+  exit 1
 fi
 
-if [ ! -f "$PACK_SHA" ]; then
-  echo "[VERIFY] ERROR: sha file not found: $PACK_SHA"
-  exit 4
-fi
+echo "[VERIFY] Checking internal manifest..."
+cd "$TMPDIR"
+sha256sum -c "$MANIFEST" || { echo "[VERIFY] FAIL: internal manifest mismatch"; exit 1; }
 
-echo "[VERIFY] Checking SHA256 of evidence pack..."
-sha256sum -c "$PACK_SHA"
-
-TMPDIR="$(mktemp -d)"
-cleanup() { rm -rf "$TMPDIR"; }
-trap cleanup EXIT
-
-echo "[VERIFY] Extracting pack..."
-tar -xf "$PACK_TAR" -C "$TMPDIR"
-
-if [ ! -f "$TMPDIR/artifacts/ci_report.json" ]; then
-  echo "[VERIFY] ERROR: missing artifacts/ci_report.json in pack"
-  exit 5
-fi
-
-echo "[VERIFY] Computing deterministic CI report hash..."
-REPORT_HASH="$(python3 tools/ci_report_hash_v1.py "$TMPDIR/artifacts/ci_report.json")"
-echo "[VERIFY] CI_REPORT_HASH_V1: $REPORT_HASH"
-
-echo "[VERIFY] PASS"
+echo "[VERIFY] PASS: pack integrity and manifest verified"
