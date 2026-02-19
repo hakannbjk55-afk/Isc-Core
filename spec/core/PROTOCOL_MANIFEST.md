@@ -419,3 +419,5 @@ the rule MUST NOT be relied upon for HARDENED or FROZEN transitions
 This document is normative.
 It is intended to be enforced by deterministic tooling.
 Any ambiguity MUST be treated as a governance failure.
+DENEME
+TEST_CHANGE
