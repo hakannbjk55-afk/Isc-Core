@@ -1,0 +1,7 @@
+{
+  "id": "vector_0009",
+  "description": "edge case: deeply nested object - canonicalization consistency",
+  "input": {"a": {"b": {"c": {"d": "value"}}}},
+  "expected": "PASS",
+  "note": "deep nesting hash stability test"
+}
