@@ -1,0 +1,7 @@
+{
+  "id": "vector_0008",
+  "description": "edge case: float precision - 1.0 vs 1 vs 1.000",
+  "input": {"value": 1.0},
+  "expected": "PASS",
+  "note": "float canonicalization consistency test"
+}

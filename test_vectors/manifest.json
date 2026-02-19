@@ -27,6 +27,10 @@
     {
       "path": "test_vectors/vector_0007.json",
       "sha256": "42a16576b0ba2fb2265746797fc72680b33ef339f51ea418066bb3913dc6aef2"
+    },
+    {
+      "path": "test_vectors/vector_0008.json",
+      "sha256": "c59176b4594737c263b860c9ef4e8c156b61cdb532d98a79eec9cdf4f7c227f1"
     }
   ],
   "version": 1
