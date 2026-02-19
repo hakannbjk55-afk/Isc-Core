@@ -3,7 +3,7 @@ import hashlib
 import json
 import os
 import sys
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Tuple
 
 MANIFEST_PATH = os.path.join("test_vectors", "manifest.json")
 
@@ -24,12 +24,26 @@ def normalize_path(p: str) -> str:
         die(f"Disallowed path traversal: {p}")
     return p2
 
+def _no_dupe_object(pairs: List[Tuple[str, Any]]) -> Dict[str, Any]:
+    obj: Dict[str, Any] = {}
+    for k, v in pairs:
+        if k in obj:
+            raise ValueError(f"Duplicate key: {k}")
+        obj[k] = v
+    return obj
+
+def strict_json_load(fp) -> Any:
+    return json.load(fp, object_pairs_hook=_no_dupe_object)
+
+def strict_json_loads(s: str) -> Any:
+    return json.loads(s, object_pairs_hook=_no_dupe_object)
+
 def load_manifest() -> Dict[str, Any]:
     if not os.path.isfile(MANIFEST_PATH):
         die(f"Missing manifest: {MANIFEST_PATH}")
     with open(MANIFEST_PATH, "r", encoding="utf-8") as f:
         try:
-            m = json.load(f)
+            m = strict_json_load(f)
         except Exception as e:
             die(f"Invalid JSON in manifest: {e}")
     if not isinstance(m, dict):
@@ -42,24 +56,17 @@ def load_manifest() -> Dict[str, Any]:
     return m
 
 def canonicalize(obj: Any) -> str:
-    # Minimal canonical JSON (placeholder until spec binding):
-    # - sorted keys
-    # - no spaces
-    # - UTF-8
-    # - newline at end
     return json.dumps(obj, sort_keys=True, separators=(",", ":"), ensure_ascii=False) + "\n"
 
 def parse_input_json(value: Any) -> Any:
-    # vectors may store input_json as an object OR as a JSON string
     if isinstance(value, str):
-        return json.loads(value)
+        return strict_json_loads(value)
     return value
 
 def check_vector_schema(path: str) -> None:
-    # Optional semantic checks: if expected_canonical_json exists, validate it.
     with open(path, "r", encoding="utf-8") as f:
         try:
-            v = json.load(f)
+            v = strict_json_load(f)
         except Exception as e:
             die(f"Invalid JSON in vector file {path}: {e}")
 
@@ -72,7 +79,6 @@ def check_vector_schema(path: str) -> None:
             die(f"{path}: expected_canonical_json must be a string")
         if not exp.endswith("\n"):
             die(f"{path}: expected_canonical_json MUST end with newline")
-        # No leading/trailing whitespace beyond final newline
         if exp[:-1] != exp[:-1].strip():
             die(f"{path}: expected_canonical_json MUST NOT have leading/trailing spaces")
         src = v.get("input_json")
@@ -138,7 +144,6 @@ def main() -> int:
             had_error = True
             continue
 
-        # Semantic checks after hash match
         check_vector_schema(path)
         print(f"[VECTOR] OK:   {path}")
 
