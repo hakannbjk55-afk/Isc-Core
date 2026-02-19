@@ -37,7 +37,9 @@ LC_ALL=C tar \
   -cf "${TMP_TAR}" \
   "${FILES[@]}"
 
-sha256sum "${TMP_TAR}" > "${TMP_SHA}"
+# Compute hash from TMP_TAR bytes but record the final tar name
+hash="$(sha256sum "${TMP_TAR}" | awk '{print $1}')"
+printf "%s  %s\n" "$hash" "${OUT_TAR}" > "${TMP_SHA}"
 mv -f "${TMP_TAR}" "${OUT_TAR}"
 mv -f "${TMP_SHA}" "${OUT_SHA}"
 
