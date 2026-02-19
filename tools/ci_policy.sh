@@ -67,7 +67,6 @@ write_report() {
 
   cat > "$REPORT_PATH" <<JSON
 {
-  "timestamp_utc": "$timestamp",
   "exit_code": $code,
   "phi_health_score": $phi_score,
   "counters": {
