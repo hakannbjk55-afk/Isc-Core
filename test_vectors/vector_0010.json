@@ -1,0 +1,7 @@
+{
+  "id": "vector_0010",
+  "description": "edge case: large integer boundary - 2^53 precision",
+  "input": {"value": 9007199254740992},
+  "expected": "PASS",
+  "note": "JS safe integer boundary canonicalization test"
+}
