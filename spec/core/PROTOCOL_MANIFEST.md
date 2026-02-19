@@ -422,4 +422,3 @@ Any ambiguity MUST be treated as a governance failure.
 DENEME
 TEST_CHANGE
 
-phi_ref: 1.618
