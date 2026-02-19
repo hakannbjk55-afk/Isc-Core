@@ -1,4 +1,6 @@
 #!/data/data/com.termux/files/usr/bin/bash
+bash tools/version_gate.sh
+
 bash tools/phi_tripwire.sh
 
 set -e
