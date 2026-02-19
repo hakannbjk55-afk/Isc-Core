@@ -1,5 +1,4 @@
 {
-  "version": 1,
   "vectors": [
     {
       "path": "test_vectors/vector_0001.json",
@@ -20,6 +19,11 @@
     {
       "path": "test_vectors/vector_0005.json",
       "sha256": "545609ee7585e32214a46b854ceadda80ba6c4acfe9b85692f990b2744473a6e"
+    },
+    {
+      "path": "test_vectors/vector_0006.json",
+      "sha256": "38dbafa5720580f28833cdad9a8a3c106d0f8e589037dd220acd66ddcc3830b7"
     }
-  ]
+  ],
+  "version": 1
 }

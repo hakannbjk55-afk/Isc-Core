@@ -1,0 +1,8 @@
+{
+  "id": "vector_0006",
+  "description": "unicode normalization: NFC vs NFD - same semantic, different bytes",
+  "input_nfc": "é",
+  "input_nfd": "e\u0301",
+  "expect_same_hash": false,
+  "note": "system current behavior: byte-level determinism, no normalization"
+}
