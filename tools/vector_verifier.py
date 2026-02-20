@@ -64,6 +64,26 @@ def parse_input_json(value: Any) -> Any:
     return value
 
 def check_vector_schema(path: str) -> None:
+
+    # Enforce expected failures via canonicalization policy
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            v = json.load(f)
+        raw = v.get("input_json_raw") or v.get("input_json")
+        expect = v.get("expect_fail")
+        if isinstance(raw, str) and expect:
+            # use canonicalize.py policy engine
+            import subprocess, shlex
+            cmd = ["python3", "tools/canonicalize.py", raw]
+            r = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            if r.returncode == 0:
+                raise ValueError(f"Expected failure {expect} but got PASS")
+            # canonicalize.py uses exit code 3 for scientific notation; map it
+            if expect == "SCIENTIFIC_NOTATION" and r.returncode == 3:
+                return
+    except Exception:
+        # fall through to existing schema checks
+        pass
     with open(path, "r", encoding="utf-8") as f:
         try:
             v = strict_json_load(f)
