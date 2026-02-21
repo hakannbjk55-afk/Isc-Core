@@ -7,7 +7,7 @@ MAX_DEPTH = 64
 
 class CanonicalError(ValueError):
     def __init__(self, code: str, msg: str = ""):
-        super().__init__(msg or code)
+        super().__init__(f"{code}:{msg}" if msg else code)
         self.code = code
 
 def _depth_check(obj, depth=0):
