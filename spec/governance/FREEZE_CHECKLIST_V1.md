@@ -31,3 +31,7 @@ Each missing item MUST be closed by:
 - adding a normative spec rule (MUST/SHOULD/MAY), and
 - adding at least one test vector that locks the behavior.
 
+
+### Deferred to v2 (explicitly out-of-scope for v1)
+- Cryptographic seal signature (pack signing) as a mandatory requirement
+- Cryptographic time anchoring (seal-time binding, TSA/public anchor)
