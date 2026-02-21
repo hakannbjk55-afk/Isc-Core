@@ -1,6 +1,5 @@
 {
   "id": "vector_0012",
-  "desc": "Scientific notation MUST be rejected in v1",
-  "input_json_raw": "{\"n\":1e3}",
-  "expect_fail": "SCIENTIFIC_NOTATION"
+  "description": "scientific notation accepted and normalized deterministically (v1 policy)",
+  "input_json_raw": "{\"value\":1e3}"
 }

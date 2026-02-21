@@ -2,6 +2,5 @@
   "id": "vector_0011",
   "desc": "Negative zero input is accepted; parser normalizes to 0 (v1)",
   "input_json_raw": "{\"value\":-0}",
-  "expect_fail": null,
   "note": "v1 policy: canonical output MUST NOT contain -0; -0 inputs normalize to 0"
 }

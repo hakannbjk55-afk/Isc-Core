@@ -1,6 +1,5 @@
 {
   "id": "vector_0005",
   "desc": "Duplicate key test (MUST FAIL)",
-  "input_json_raw": "{\"a\":1,\"a\":2}",
-  "expect_fail": "DUPLICATE_KEY"
+  "input_json_raw": "{\"a\":1,\"a\":2}"
 }

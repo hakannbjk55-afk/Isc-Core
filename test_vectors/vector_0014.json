@@ -1,0 +1,1 @@
+{"id": "vector_0014", "description": "deep nesting allowed in v1 minimal model", "input_json": {"a": {"b": {"c": {"d": {"e": {"f": {"g": {"h": {"i": {"j": {"k": {"l": {"m": {"n": {"o": {"p": {"q": {"r": {"s": {"t": 1}}}}}}}}}}}}}}}}}}}}}

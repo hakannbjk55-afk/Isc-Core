@@ -2,6 +2,23 @@
 
 import json
 import re
+
+MAX_DEPTH = 64
+
+class CanonicalError(ValueError):
+    def __init__(self, code: str, msg: str = ""):
+        super().__init__(msg or code)
+        self.code = code
+
+def _depth_check(obj, depth=0):
+    if depth > MAX_DEPTH:
+        raise CanonicalError("DEPTH_LIMIT_EXCEEDED", f"depth>{MAX_DEPTH}")
+    if isinstance(obj, dict):
+        for v in obj.values():
+            _depth_check(v, depth + 1)
+    elif isinstance(obj, list):
+        for v in obj:
+            _depth_check(v, depth + 1)
 from typing import Any
 
 
@@ -9,6 +26,7 @@ _SCI_PATTERN = re.compile(r'-?\d+(\.\d+)?[eE][+-]?\d+')
 
 
 def canonicalize(obj: Any) -> str:
+    _depth_check(obj, 0)
     # Minimal canonical JSON: sorted keys, no spaces, UTF-8, newline at end
     return json.dumps(obj, sort_keys=True, separators=(",", ":"), ensure_ascii=False) + "\n"
 

@@ -14,11 +14,11 @@
     },
     {
       "path": "test_vectors/vector_0004.json",
-      "sha256": "19fa019c2d7081e3c22de5a7ff06d6cde7d6139ac37ac4d4d7d4a18a28047d24"
+      "sha256": "f826ef9cfec0c4d6985aaf01b0f9326172b47dd530720c2707e3cfce4e16cc96"
     },
     {
       "path": "test_vectors/vector_0005.json",
-      "sha256": "545609ee7585e32214a46b854ceadda80ba6c4acfe9b85692f990b2744473a6e"
+      "sha256": "bbbf56d6a6b6ea970f3a1750530f55f6cae3defd996ab3ae261dd54528c9f432"
     },
     {
       "path": "test_vectors/vector_0006.json",
@@ -26,7 +26,7 @@
     },
     {
       "path": "test_vectors/vector_0007.json",
-      "sha256": "42a16576b0ba2fb2265746797fc72680b33ef339f51ea418066bb3913dc6aef2"
+      "sha256": "8f1436b9aaea7457433d04380f8fdb67f8b20314ddf8f6972ff4ec89607e50c9"
     },
     {
       "path": "test_vectors/vector_0008.json",
@@ -42,15 +42,19 @@
     },
     {
       "path": "test_vectors/vector_0011.json",
-      "sha256": "317f6ba2d6455b621e65012f152e93dc47fc0891217ec402cd98696ef082b21b"
+      "sha256": "bb893e547a2bc5b59386a46e14ae6f7ebc270489f6f77ee761aa890040441a99"
     },
     {
       "path": "test_vectors/vector_0012.json",
-      "sha256": "6b3c7ed98e40fb4aa9764363e0c30a5db8ed3692773b3ad9c577de28a54f783e"
+      "sha256": "166f3b54f09033ebcff704c600d05a9c15e8bb0a27113239e0cb1c00fa07b342"
     },
     {
       "path": "test_vectors/vector_0013.json",
-      "sha256": "8923ea265bf7419efed27a2dd5447cac01cfbecfd5800d7432cce8c197feb435"
+      "sha256": "f563ec5ac71b5e98e2dbc45b0c7f48b76d948aa9c1a49b79dc33603b42eb7748"
+    },
+    {
+      "path": "test_vectors/vector_0014.json",
+      "sha256": "8add7ae276a3913e0dfc91c2d34c59dbe3819a95f8e495cdcc4cfc838ec87685"
     }
   ],
   "version": 1

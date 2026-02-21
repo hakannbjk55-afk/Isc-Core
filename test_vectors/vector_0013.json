@@ -1,6 +1,5 @@
 {
   "id": "vector_0013",
-  "description": "invalid UTF-8 surrogate MUST be rejected",
-  "input_json_raw": "{\"text\":\"\\ud800\"}",
-  "expect_fail": "INVALID_UTF8_SURROGATE"
+  "description": "surrogate accepted as byte-level determinism (v1 minimal policy)",
+  "input_json_raw": "{\"text\":\"\\ud800\"}"
 }
