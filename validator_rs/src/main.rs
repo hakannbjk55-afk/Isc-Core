@@ -183,12 +183,36 @@ fn canon_value(out: &mut String, v: &Value) {
     }
 }
 
-fn canon_json(mut v: Value) -> String {
+const MAX_DEPTH: usize = 64;
+
+fn depth_check(v: &Value, depth: usize) -> Result<(), String> {
+    if depth > MAX_DEPTH {
+        return Err(format!("DEPTH_LIMIT_EXCEEDED:depth>{}", MAX_DEPTH));
+    }
+    match v {
+        Value::Array(a) => {
+            for x in a {
+                depth_check(x, depth + 1)?;
+            }
+        }
+        Value::Object(o) => {
+            for (_k, x) in o.iter() {
+                depth_check(x, depth + 1)?;
+            }
+        }
+        _ => {}
+    }
+    Ok(())
+}
+
+fn canon_json(mut v: Value) -> Result<String, String> {
     normalize_negative_zero(&mut v);
+    depth_check(&v, 0)?;
+
     let mut out = String::new();
     canon_value(&mut out, &v);
     out.push('\n');
-    out
+    Ok(out)
 }
 
 fn main() {
@@ -201,7 +225,10 @@ fn main() {
             eprintln!("{}", e);
             std::process::exit(10);
         });
-        print!("{}", canon_json(v));
+        match canon_json(v) {
+            Ok(out) => print!("{}", out),
+            Err(e) => { eprintln!("{}", e); std::process::exit(10); }
+        };
         return;
     }
 
@@ -215,7 +242,7 @@ fn main() {
                 eprintln!("{}", e);
                 std::process::exit(10);
             });
-            print!("{}", canon_json(vv));
+            match canon_json(vv) { Ok(out) => print!("{}", out), Err(e) => { eprintln!("{}", e); std::process::exit(10); } };
             return;
         }
 
@@ -224,7 +251,7 @@ fn main() {
                 eprintln!("{}", e);
                 std::process::exit(10);
             });
-            print!("{}", canon_json(vv));
+            match canon_json(vv) { Ok(out) => print!("{}", out), Err(e) => { eprintln!("{}", e); std::process::exit(10); } };
             return;
         }
 

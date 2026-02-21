@@ -47,14 +47,28 @@ def canonicalize_from_vector(vector: dict) -> str:
         raise ValueError("vector missing input_json")
     return canonicalize(parse_input(src))
 
-
 if __name__ == "__main__":
     import sys
+    import json
+
     if len(sys.argv) != 2:
         print("usage: canonicalize.py '<json>'", file=sys.stderr)
         raise SystemExit(2)
+
     raw = sys.argv[1]
-    if _SCI_PATTERN.search(raw):
-        raise SystemExit(3)
-    obj = json.loads(raw)
-    print(canonicalize(obj), end="")
+
+    try:
+        obj = json.loads(raw)
+        sys.stdout.write(canonicalize(obj))
+        raise SystemExit(0)
+
+    except CanonicalError as e:
+        # Stable error line for parity with Rust: CODE:message
+        msg = e.args[0] if e.args else ""
+        print(f"{e.code}:{msg}", file=sys.stderr)
+        raise SystemExit(10)
+
+    except Exception as e:
+        print(f"INVALID_JSON:{e}", file=sys.stderr)
+        raise SystemExit(11)
+
