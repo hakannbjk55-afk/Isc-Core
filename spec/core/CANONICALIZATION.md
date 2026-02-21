@@ -444,3 +444,59 @@ Any ambiguity not explicitly resolved by this document MUST be treated as a fail
 Canonicalization MUST always prefer REJECT over "best effort".
 
 This prevents silent drift and preserves frozen genome integrity.
+# Normative Canonical JSON Profile v1
+
+This section defines the mathematically binding canonicalization rules for ISC Core v1.
+All statements marked MUST are normative and implementation-independent.
+
+## 1. Determinism
+
+Canonicalization MUST be deterministic.
+
+For any valid input X:
+canon(X) MUST always produce identical byte output across all compliant implementations.
+
+Canonicalization MUST be idempotent:
+canon(canon(X)) == canon(X)
+
+## 2. Object Rules
+
+- JSON objects MUST have lexicographically sorted keys.
+- Sorting MUST be based on Unicode code point order.
+- Duplicate keys MUST cause rejection.
+
+## 3. Array Rules
+
+- Array element order MUST be preserved.
+- No reordering is permitted.
+
+## 4. Number Rules
+
+- Negative zero (-0, -0.0) MUST normalize to 0.
+- Scientific notation (e.g., 1e3, 1E+3) MUST be rejected.
+- NaN and Infinity MUST be rejected.
+- Integers beyond safe JSON numeric range MUST be rejected.
+
+## 5. String Rules
+
+- Strings MUST be valid UTF-8.
+- Lone surrogate code points MUST be rejected.
+- No implicit Unicode normalization MUST occur.
+- Canonicalization MUST preserve input byte semantics.
+
+## 6. Whitespace Rules
+
+- Output MUST NOT contain unnecessary whitespace.
+- Object separators MUST be ",".
+- Key-value separators MUST be ":".
+- Output MUST end with exactly one newline (LF).
+- CRLF normalization MUST NOT be applied implicitly.
+
+## 7. Canonical Byte Authority
+
+The canonical output bytes are the sole authoritative representation.
+
+Hashing, sealing, and evidence generation MUST operate on canonical bytes only.
+
+Any change that alters canonical bytes MUST require a MAJOR version bump.
+
