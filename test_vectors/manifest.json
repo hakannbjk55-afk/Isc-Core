@@ -46,7 +46,7 @@
     },
     {
       "path": "test_vectors/vector_0012.json",
-      "sha256": "166f3b54f09033ebcff704c600d05a9c15e8bb0a27113239e0cb1c00fa07b342"
+      "sha256": "c4a7925e5e67e7b09418c89a11b078604b1f850b90e812f9e21b14e4573d5902"
     },
     {
       "path": "test_vectors/vector_0013.json",

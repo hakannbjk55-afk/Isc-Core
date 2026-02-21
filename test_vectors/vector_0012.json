@@ -1,5 +1,7 @@
 {
   "id": "vector_0012",
-  "description": "scientific notation accepted and normalized deterministically (v1 policy)",
-  "input_json_raw": "{\"value\":1e3}"
+  "description": "edge case: scientific notation accepted; normalizes deterministically (v1)",
+  "input_json_raw": "{\"value\":1e3}",
+  "expected": "PASS",
+  "note": "v1 policy: accept scientific notation; canonical output must be deterministic"
 }
