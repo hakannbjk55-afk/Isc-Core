@@ -63,3 +63,30 @@ A seal MUST NOT validate unless the referenced registry snapshot contains the si
 Historical seals remain valid if:
 - The key was active in the referenced registry snapshot.
 
+
+## Canonical Binding (normative)
+
+The Key Registry snapshot identity MUST be derived from Core canonicalization.
+
+Implementations MUST:
+
+1) Parse the registry JSON as strict JSON.
+2) Canonicalize it using Canonical Core v1 (major=12).
+3) Compute:
+
+   registry_id =
+   SHA256( ISC_REGISTRY_V1\0 || SHA256(canonical_registry_bytes) )
+
+Where:
+- canonical_registry_bytes are the exact UTF-8 bytes produced by Core canonicalization.
+- SHA256(...) is the raw 32-byte digest.
+- ISC_REGISTRY_V1\0 is an ASCII domain-separation prefix.
+
+### Informational hash (non-normative)
+
+Implementations MAY compute:
+
+   file_sha256 = SHA256(registry_file_bytes)
+
+However, file_sha256 MUST NOT be used as the authoritative registry identifier.
+
