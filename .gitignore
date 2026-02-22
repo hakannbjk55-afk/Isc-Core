@@ -3,3 +3,8 @@ isc_verify/Cargo.lock
 
 # CI outputs (local)
 artifacts/
+
+# NEVER COMMIT PRIVATE KEYS
+registry/ed25519_private.pem
+*.pyc
+__pycache__/
