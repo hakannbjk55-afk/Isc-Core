@@ -16,6 +16,7 @@ FILES=(
   "test_vectors/manifest.json"
   "tools/ci_policy.sh"
   "tools/version_gate.sh"
+    "registry/registry_snapshot.json"
   "tools/phi_tripwire.sh"
 )
 

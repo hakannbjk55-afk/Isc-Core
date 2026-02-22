@@ -1,0 +1,11 @@
+{
+  "registry_id": "ISC_REGISTRY_MAIN",
+  "core_version": "1.0.0",
+  "entries": [
+    {
+      "key_id": "KEY_001",
+      "algo": "ed25519",
+      "status": "active"
+    }
+  ]
+}

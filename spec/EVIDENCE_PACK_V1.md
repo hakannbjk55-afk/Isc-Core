@@ -15,6 +15,7 @@ This document defines a deterministic, portable evidence package format.
 - tools/ci_policy.sh (policy snapshot)
 - tools/version_gate.sh
 - tools/phi_tripwire.sh
+ - registry/registry_snapshot.json
 
 ## Deterministic packaging rules
 - Archive format: tar
