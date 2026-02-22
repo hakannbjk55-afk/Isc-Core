@@ -1,0 +1,36 @@
+name: TIME_LAYER_V1 (release attestation)
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  time_layer_release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install jq
+        run: sudo apt-get update && sudo apt-get install -y jq
+
+      - name: Run core CI policy (produces artifacts/)
+        run: ./tools/ci_policy.sh
+
+      - name: Set tag env
+        run: echo "GIT_TAG=${GITHUB_REF_NAME}" >> $GITHUB_ENV
+
+      - name: TIME_LAYER attestation from core
+        run: modules/time_layer_v1/tools/attest_from_core.sh
+
+      - name: Upload time layer attestations
+        uses: actions/upload-artifact@v4
+        with:
+          name: time_layer_v1_attestations
+          path: modules/time_layer_v1/out/attestations/*.json
