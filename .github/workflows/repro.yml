@@ -1,0 +1,22 @@
+name: Reproducible Gate
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build Evidence Pack
+        run: |
+          chmod +x tools/build_evidence_pack_v1.sh
+          ./tools/build_evidence_pack_v1.sh
+
+      - name: Hash Evidence Pack
+        run: |
+          sha256sum artifacts/evidence_pack_v1.tar > pack.sha256
+          cat pack.sha256
