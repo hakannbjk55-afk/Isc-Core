@@ -1,5 +1,4 @@
 name: Reproducible Gate
-
 on:
   push:
     branches: [ main ]
@@ -36,3 +35,10 @@ jobs:
             exit 70
           fi
           echo "[gate] reproducible: OK"
+
+      - name: Capture ENV+TIME fingerprint
+        run: |
+          set -euo pipefail
+          chmod +x tools/ci_fingerprint.sh
+          ./tools/ci_fingerprint.sh
+          echo "[ci] envtime_sha=$(cat artifacts/envtime.sha256)"
