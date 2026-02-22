@@ -1,4 +1,4 @@
-#!/data/data/com.termux/files/usr/bin/bash
+#!/usr/bin/env bash
 bash tools/version_gate.sh
 
 bash tools/phi_tripwire.sh
