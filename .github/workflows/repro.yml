@@ -13,10 +13,26 @@ jobs:
 
       - name: Build Evidence Pack
         run: |
+          set -euo pipefail
           chmod +x tools/build_evidence_pack_v1.sh
           ./tools/build_evidence_pack_v1.sh
 
       - name: Hash Evidence Pack
         run: |
-          sha256sum artifacts/evidence_pack_v1.tar > pack.sha256
-          cat pack.sha256
+          set -euo pipefail
+          sha256sum artifacts/evidence_pack_v1.tar | awk '{print $1}' > pack.sha256
+          echo "[ci] produced_sha=$(cat pack.sha256)"
+
+      - name: Compare with expected hash
+        run: |
+          set -euo pipefail
+          test -f spec/golden/EVIDENCE_PACK_V1.sha256
+          expected="$(cat spec/golden/EVIDENCE_PACK_V1.sha256 | tr -d ' \t\r\n')"
+          produced="$(cat pack.sha256 | tr -d ' \t\r\n')"
+          echo "[ci] expected_sha=$expected"
+          echo "[ci] produced_sha=$produced"
+          if [ "$expected" != "$produced" ]; then
+            echo "[gate] reproducible: FAIL (expected != produced)"
+            exit 70
+          fi
+          echo "[gate] reproducible: OK"
