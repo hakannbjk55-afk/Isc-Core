@@ -16,6 +16,7 @@ INCLUDE = [
     "artifacts/governance/rotation_commit.json",
     "artifacts/governance/rotation_commit_hash.txt",
     "artifacts/governance/rotation_commit_hash.txt.sig",
+    "artifacts/governance/governance_allowed_signers",
     "artifacts/governance/revocation_record.json",
 ]
 
