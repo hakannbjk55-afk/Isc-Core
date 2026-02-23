@@ -41,3 +41,35 @@ PROOF_HASH="$(jq -r '.attestation_hash' "$PROOF" | tr -d '\r\n')"
 [ "$ATT_HASH" = "$PROOF_HASH" ] || { echo "attestation_hash mismatch" >&2; exit 1; }
 
 echo "OK: evidence_pack_v2 verified"
+
+# ROTATION ENFORCEMENT
+GOV_DIR="$TMP/artifacts/governance"
+ROTATION="$GOV_DIR/rotation_commit.json"
+REVOCATION="$GOV_DIR/revocation_record.json"
+
+if [ ! -f "$ROTATION" ]; then
+  echo "[GOVERNANCE] No rotation_commit.json — skipping rotation check"
+else
+  REVOKED_FP="$(jq -r '.revoked_key_fingerprint' "$REVOCATION" | tr -d '\r\n')"
+  SIGNER_FP="$(jq -r '.quorum_signatures[0].key_fingerprint' "$ROTATION" | tr -d '\r\n')"
+
+  if [ "$SIGNER_FP" = "$REVOKED_FP" ]; then
+    EFF_TS="$(jq -r '.effective_timestamp' "$ROTATION" | tr -d '\r\n')"
+    ATT_TS="$(jq -r '.captured_at_utc' "$TMP/artifacts/time_layer_v1_signed/attestation.json" | tr -d '\r\n')"
+
+    if [[ "$ATT_TS" > "$EFF_TS" ]]; then
+      echo "[GOVERNANCE] FAIL: revoked key used after revocation"
+      exit 1
+    fi
+  fi
+
+  ROT_SIG="$GOV_DIR/rotation_commit_hash.txt.sig"
+  ROT_HASH="$GOV_DIR/rotation_commit_hash.txt"
+  GOV_ALLOW="$GOV_DIR/governance_allowed_signers"
+
+  if [ -f "$ROT_SIG" ]; then
+    ssh-keygen -Y verify -f "$GOV_ALLOW" -I isc-core.governance.v1 -n isc-core.key_rotation_v1 -s "$ROT_SIG" < "$ROT_HASH" >/dev/null 2>&1 && echo "[GOVERNANCE] rotation_commit signature OK" || { echo "[GOVERNANCE] FAIL: rotation_commit signature invalid"; exit 1; }
+  fi
+  echo "[GOVERNANCE] rotation check OK"
+fi
+
