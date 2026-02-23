@@ -8,3 +8,9 @@ artifacts/
 registry/ed25519_private.pem
 *.pyc
 __pycache__/
+
+# TIME_LAYER signing private key
+keys/time_layer_signing_ed25519
+
+# local signing keys
+keys/
