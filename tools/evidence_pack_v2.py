@@ -13,6 +13,10 @@ INCLUDE = [
   "artifacts/time_layer_v1_signed/attestation_proof.json",
   "artifacts/time_layer_v1_signed/keys/allowed_signers",
   "artifacts/time_layer_v1_signed/keys/time_layer_signing_ed25519.pub",
+    "artifacts/governance/rotation_commit.json",
+    "artifacts/governance/rotation_commit_hash.txt",
+    "artifacts/governance/rotation_commit_hash.txt.sig",
+    "artifacts/governance/revocation_record.json",
 ]
 
 def sha256_file(path):
