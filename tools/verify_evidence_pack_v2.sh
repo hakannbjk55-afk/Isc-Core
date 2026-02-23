@@ -70,6 +70,17 @@ else
   if [ -f "$ROT_SIG" ]; then
     ssh-keygen -Y verify -f "$GOV_ALLOW" -I isc-core.governance.v1 -n isc-core.key_rotation_v1 -s "$ROT_SIG" < "$ROT_HASH" >/dev/null 2>&1 && echo "[GOVERNANCE] rotation_commit signature OK" || { echo "[GOVERNANCE] FAIL: rotation_commit signature invalid"; exit 1; }
   fi
+
+  # Revocation signature verify
+  REV_SIG="$GOV_DIR/revocation_record_hash.txt.sig"
+  REV_HASH="$GOV_DIR/revocation_record_hash.txt"
+
+  if [ ! -f "$REV_SIG" ]; then
+    echo "[GOVERNANCE] FAIL: revocation_record signature missing"
+    exit 1
+  fi
+
+  ssh-keygen -Y verify -f "$GOV_ALLOW"     -I isc-core.governance.v1     -n isc-core.revocation_v1     -s "$REV_SIG" < "$REV_HASH" >/dev/null 2>&1     && echo "[GOVERNANCE] revocation_record signature OK"     || { echo "[GOVERNANCE] FAIL: revocation_record signature invalid"; exit 1; }
   echo "[GOVERNANCE] rotation check OK"
 fi
 
