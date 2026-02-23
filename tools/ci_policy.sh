@@ -99,6 +99,7 @@ on_exit() {
   echo "[CI] Checking deterministic CI report hash (CI_REPORT_V1)"
   python3 tools/ci_report_hash_check.py
 echo "[CI] Building Evidence Pack v1"
+python tools/evidence_pack_v2.py || true
 bash tools/build_evidence_pack_v1.sh
   exit "$code"
 }
