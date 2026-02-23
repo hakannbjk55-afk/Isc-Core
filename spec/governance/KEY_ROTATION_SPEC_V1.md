@@ -101,3 +101,66 @@ It does NOT:
 
 Version: KEY_ROTATION_SPEC_V1
 Linked Release: v1.0.0-isc-core-frozen
+
+---
+
+## 7. Rotation Commit Format (Normative)
+
+A key rotation MUST produce a file named:
+
+rotation_commit.json
+
+The file MUST conform to the following canonical structure:
+
+{
+  "version": "KEY_ROTATION_V1",
+  "namespace": "isc-core.key_rotation_v1",
+  "rotation_id": "",
+  "rotation_type": "scheduled | emergency | governance",
+  "policy_version": "1-of-1",
+
+  "created_utc": "",
+  "effective_timestamp": "",
+
+  "old_key_fingerprint": "",
+  "new_key_fingerprint": "",
+  "key_scheme": "ssh-ed25519",
+
+  "rotation_reason": "",
+
+  "repo_commit": "",
+  "state_hash": "",
+
+  "prev_rotation_hash": null,
+  "rotation_commit_hash": "",
+
+  "quorum_signatures": [
+    {
+      "signer_id": "",
+      "key_fingerprint": "",
+      "sig_alg": "ssh-ed25519",
+      "signature_file": "",
+      "sig_sha256": ""
+    }
+  ]
+}
+
+### Canonicalization Rules
+
+- JSON MUST be canonical (deterministic field order).
+- All timestamps MUST be RFC3339 UTC (ending with Z).
+- rotation_commit_hash MUST be computed over canonical JSON (excluding quorum_signatures).
+- quorum_signatures MUST sign rotation_commit_hash.
+- Namespace for signature verification MUST be:
+  isc-core.key_rotation_v1
+
+### Validation Requirements
+
+Verification engines MUST:
+
+- Validate canonical structure
+- Validate rotation_commit_hash integrity
+- Validate quorum threshold
+- Validate signature namespace binding
+- Validate policy_version consistency
+
