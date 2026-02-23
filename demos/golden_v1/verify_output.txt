@@ -1,0 +1,8 @@
+[V2] checking tar sha256 vs manifest...
+[V2] sha256 OK
+[V2] verifying signature...
+[V2] signature OK
+OK: evidence_pack_v2 verified
+[GOVERNANCE] rotation_commit signature OK
+[GOVERNANCE] revocation_record signature OK
+[GOVERNANCE] rotation check OK
