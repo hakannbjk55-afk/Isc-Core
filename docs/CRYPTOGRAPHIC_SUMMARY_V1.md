@@ -2,27 +2,37 @@
 
 ## 1. Purpose
 
-This document defines what ISC Core cryptographically guarantees and what it does not.
-It is a normative summary of the system’s trust boundaries.
+This document defines the cryptographic guarantees of ISC Core V1.
 
-ISC Core is designed as a deterministic, tamper-evident, governance-enforced evidence engine.
+It describes:
 
-## 2. What ISC Core Guarantees
+- What is cryptographically enforced
+- What is content-derived vs environment-derived
+- What integrity boundaries exist
+- What is explicitly NOT guaranteed
 
-### 2.1 Deterministic State Integrity
+This document defines the trust boundary of ISC Core.
+
+---
+
+## 2. Deterministic State Integrity
+
+ISC Core enforces deterministic CI outputs.
 
 Given the same repository state and canonicalization rules:
 
-- The CI report is deterministic.
-- The CI report hash (CI_REPORT_V1) is stable.
-- The Evidence Pack V2 archive is reproducible.
-- Hashes are content-derived, not environment-derived.
+- `ci_report.json` is deterministic
+- `CI_REPORT_V1` hash is stable
+- Evidence Pack V2 archive is reproducible
+- Hashes are content-derived (not environment-derived)
 
-This guarantees:
+Guarantee:
 
-If two parties build from the same state, they obtain identical hashes.
+Two independent builders using the same state produce identical hashes.
 
-### 2.2 Tamper-Evident Evidence
+---
+
+## 3. Evidence Pack Integrity
 
 Evidence Pack V2 includes:
 
@@ -30,115 +40,149 @@ Evidence Pack V2 includes:
 - Signed attestation
 - Governance rotation record
 - Governance revocation record
-- Hash manifests
+- Artifact binding manifest
+- SHA256 manifest
 
-The verifier enforces:
+Verification enforces:
 
 - Archive SHA256 integrity
+- Manifest consistency
 - Signature validity
-- Rotation signature validity
-- Revocation signature validity
-- Rotation enforcement logic
+- Governance signature validity
+- Artifact digest format validation
 
-This guarantees:
+Guarantee:
 
-Any modification of the package or governance records is detectable.
+Any modification to the bundle is detectable.
 
-### 2.3 Signed Attestation
+---
 
-Release attestations are signed using Ed25519.
+## 4. Signed Attestation Model
 
-The verifier confirms:
+Attestations are signed using Ed25519.
+
+Verifier enforces:
 
 - Signature validity
 - Namespace binding
 - Key identity match
 
-This guarantees:
+Guarantee:
 
 The attestation was produced by the declared signing key.
 
-### 2.4 Governance Enforcement
+Limitation:
 
-Rotation and revocation records are:
+If the private key is compromised before revocation,
+forged attestations may appear valid.
 
-- Hash-derived
+---
+
+## 5. Governance Lifecycle Enforcement
+
+Governance records are:
+
+- Content-derived
+- Hash-bound
 - Cryptographically signed
-- Included in the evidence bundle
-- Verified during offline validation
+- Included inside the evidence bundle
 
-The verifier enforces:
+Verifier enforces:
 
-- Revoked keys cannot be used after effective_timestamp
-- Rotation records must match signature
+- Rotation signature validity
+- Revocation signature validity
+- Revoked keys cannot sign after effective_timestamp
 
-This guarantees:
+Guarantee:
 
-Key lifecycle events are cryptographically bound and enforceable.
+Key lifecycle events are cryptographically enforceable.
 
-### 2.5 Offline Verifiability
+Limitation:
 
-All required verification artifacts are included inside Evidence Pack V2.
+Current governance policy is 1-of-1 (single signer).
+
+---
+
+## 6. Artifact Binding
+
+Artifact manifests bind produced artifacts to evidence.
+
+Each subject includes:
+
+- SHA256 digest
+- Algorithm identifier
+- Name
+- Source
+
+Verifier enforces:
+
+- Digest format correctness
+- Manifest hash integrity
+
+Guarantee:
+
+Artifacts referenced in the bundle are cryptographically identified.
+
+Limitation:
+
+If deployment systems do not enforce digest matching,
+final-mile swap remains possible.
+
+---
+
+## 7. Offline Verifiability
+
+All verification artifacts are included in Evidence Pack V2.
+
 No external service is required.
 
-This guarantees:
+Guarantee:
 
 Verification can be performed without network access.
 
-## 3. What ISC Core Does NOT Guarantee
+Limitation:
 
-ISC Core does NOT guarantee:
+Time claims are declared, not externally notarized.
 
-- Absolute time truth (only declared timestamps)
-- External notarization
-- Hardware root of trust
-- Multi-party quorum (current policy: 1-of-1)
-- Protection against compromised private keys prior to revocation
-- Protection against malicious code intentionally committed before freeze
+---
 
-ISC Core provides cryptographic integrity and governance enforcement, not behavioral correctness of code.
+## 8. What ISC Core Does NOT Guarantee
 
-## 4. Trust Model
+ISC Core does NOT provide:
 
-Current governance policy:
+- Consensus truth
+- External timestamp authority
+- Hardware root-of-trust
+- Multi-party quorum governance (V1)
+- Behavioral correctness guarantees
+- Protection against key theft prior to revocation
 
-- Quorum: 1-of-1
-- Key rotation supported
-- Revocation enforced
-- Core protocol frozen
+ISC Core provides cryptographic integrity,
+not distributed trust.
 
-Future expansion may introduce:
+---
 
-- Multi-signer quorum
-- External anchoring
-- Governance hash chaining
+## 9. Cryptographic Primitives
 
-## 5. System Classification
+- SHA256 (content hashing)
+- Ed25519 (signatures)
+- Deterministic JSON canonicalization (project-defined)
 
-ISC Core is:
+All guarantees depend on the correctness of these primitives.
 
-- Deterministic
-- Tamper-evident
-- Cryptographically signed
-- Governance-aware
-- Offline verifiable
+---
 
-ISC Core is not:
+## 10. Trust Boundary Definition
 
-- A blockchain
-- A public timestamp authority
-- A consensus network
-- A distributed trust system (yet)
+ISC Core V1 defines a portable, enforceable,
+cryptographically verifiable evidence boundary.
 
-## 6. Conclusion
+Strength comes from:
 
-ISC Core provides a portable, enforceable, cryptographically verifiable evidence system.
-
-Its strength lies in:
-
-- Deterministic builds
-- Signed state attestations
+- Deterministic hashing
+- Signed state commitments
 - Enforced governance lifecycle
-- Strict core freeze discipline
+- Strict protocol freeze discipline
 
-This document defines the trust boundary of ISC Core V1.
+This document defines the cryptographic scope of ISC Core V1.
+
