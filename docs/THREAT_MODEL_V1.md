@@ -1,4 +1,3 @@
-cat > docs/THREAT_MODEL_V1.md << 'EOF'
 # ISC Core — Threat Model V1
 
 ## 1. System Overview
@@ -131,4 +130,3 @@ External time anchoring, multi-party quorum governance, hardware-backed keys, an
 5. Optional external timestamp anchoring  
 6. Future multi-signer quorum governance  
 
-EOF
