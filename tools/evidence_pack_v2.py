@@ -12,6 +12,8 @@ INCLUDE = [
   "artifacts/time_layer_v1_signed/attestation_hash.txt.sig",
   "artifacts/time_layer_v1_signed/attestation_proof.json",
   "artifacts/time_layer_v1_signed/keys/allowed_signers",
+    "artifacts/artifact_manifest_v1.json",
+    "artifacts/artifact_manifest_v1.sha256",
   "artifacts/time_layer_v1_signed/keys/time_layer_signing_ed25519.pub",
     "artifacts/governance/rotation_commit.json",
     "artifacts/governance/rotation_commit_hash.txt",
