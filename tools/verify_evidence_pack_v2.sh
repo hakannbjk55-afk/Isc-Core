@@ -84,3 +84,17 @@ else
   echo "[GOVERNANCE] rotation check OK"
 fi
 
+
+# ARTIFACT BINDING CHECK
+AB_JSON="$TMP/artifacts/artifact_manifest_v1.json"
+if [ -f "$AB_JSON" ]; then
+  if ! jq -e '.version=="ARTIFACT_BINDING_V1"' "$AB_JSON" >/dev/null 2>&1; then
+    echo "[ARTIFACT] FAIL: invalid artifact manifest structure/version"
+    exit 1
+  fi
+  if ! jq -e '.subjects | type == "array"' "$AB_JSON" >/dev/null 2>&1; then
+    echo "[ARTIFACT] FAIL: subjects must be array"
+    exit 1
+  fi
+  echo "[ARTIFACT] artifact_manifest OK"
+fi
