@@ -1,6 +1,6 @@
 # ISC Core
 ![CI](https://github.com/hakannbjk55-afk/Isc-Core/actions/workflows/ci.yml/badge.svg)
-![Release](https://img.shields.io/github/v/release/hakannbjk55-afk/Isc-Core/hakannbjk55-afk/Isc-Core)
+![Release](https://img.shields.io/github/v/release/hakannbjk55-afk/Isc-Core?display_name=tag)
 Solves: verifiable CI integrity, signed governance lifecycle, and offline release validation.
 
 ISC Core is a deterministic CI verification engine that binds build artifacts to signed governance and time-anchored Evidence Packs.
