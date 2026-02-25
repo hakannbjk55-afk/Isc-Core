@@ -2,7 +2,7 @@
 ![CI](https://github.com/hakannbjk55-afk/Isc-Core/actions/workflows/ci.yml/badge.svg)
 ![Release](https://img.shields.io/github/v/release/hakannbjk55-afk/Isc-Core)
 
-ISC Core is a reproducible verification engine that produces cryptographically bound Evidence Packs from CI pipelines.
+ISC Core is a deterministic CI verification engine that binds build artifacts to signed governance and time-anchored Evidence Packs.
 
 It enforces deterministic hashing, signed governance lifecycle, artifact binding, and offline-verifiable release attestations.
 
