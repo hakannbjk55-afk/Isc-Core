@@ -23,3 +23,7 @@ CI report hash: MATCH
 VERDICT: TRUSTED
 
 Verification works fully offline.
+
+## Latest Stable Release
+
+https://github.com/hakannbjk55-afk/Isc-Core/releases/tag/v1.7.0-hardening-baseline
