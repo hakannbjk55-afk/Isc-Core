@@ -8,7 +8,7 @@ ISC Core defines a strict integrity boundary.
 
 ## Quick Start (60-Second Verification)
 
-git clone <repo-url>
+git clone git@github.com:hakannbjk55-afk/Isc-Core.git
 cd ISC-Core
 python tools/verifier.py examples/sample_evidence_pack_v2.tar
 
