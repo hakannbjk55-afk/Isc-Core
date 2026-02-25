@@ -1,4 +1,6 @@
 # ISC Core
+![CI](https://github.com/hakannbjk55-afk/Isc-Core/actions/workflows/ci.yml/badge.svg)
+![Release](https://img.shields.io/github/v/release/hakannbjk55-afk/Isc-Core)
 
 ISC Core is a reproducible verification engine that produces cryptographically bound Evidence Packs from CI pipelines.
 
