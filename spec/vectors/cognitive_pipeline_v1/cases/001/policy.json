@@ -1,0 +1,4 @@
+{
+  "allowlist_hashes": ["deadbeef"],
+  "require_signature": true
+}

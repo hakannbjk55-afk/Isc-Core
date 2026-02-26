@@ -1,0 +1,31 @@
+{
+  "case_id": "CPV1-CASE-001",
+  "files": [
+    {
+      "name": "ci_report.json",
+      "sha256": "07ba110f2ab694bb7c9cf3dafabe37bcdf10a47affe1dd8fa66b7df83372d9b3"
+    },
+    {
+      "name": "payload.canon.json",
+      "sha256": "bf4fac0917cd1045544894ba1f080e4085d6c59da6f38579bc4adb64b9c3cf66"
+    },
+    {
+      "name": "payload.json",
+      "sha256": "696eb6006738761f35eca056e8c9bc79383999834dae654ba4f0701859a52891"
+    },
+    {
+      "name": "policy.canon.json",
+      "sha256": "abee5b18198c03811bf5866dd91266abbc038f842251c78798ccbfc4ce1c7dcd"
+    },
+    {
+      "name": "policy.json",
+      "sha256": "8e6b0194d1630f93d3aa237a5a5faa82a0efe12b039860178a5afc17d55e7921"
+    },
+    {
+      "name": "verdict.json",
+      "sha256": "40f884a1d4a07742aeda94116019509c39b82742044201376a1356ea9a90ad9c"
+    }
+  ],
+  "spec_id": "ISC_COGNITIVE_PIPELINE_V1",
+  "spec_version": "1.0.0"
+}
