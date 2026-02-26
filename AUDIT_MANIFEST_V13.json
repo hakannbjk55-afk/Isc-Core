@@ -1,0 +1,18 @@
+{
+  "audit_manifest_version": "1.0",
+  "tag": "v13.0.0-audit",
+  "tag_commit": "79a4a615cd20ddb389ec6de2cb8ff0cfbc7578cc",
+  "created_at": "2026-02-26",
+  "artifacts": {
+    "evidence_pack_v2": {
+      "file": "artifacts/evidence_pack_v2.tar",
+      "sha256": "373f9a6fa1780d29fc3fbd05cda52ba96d65d96649ee2e36ab09b8b078d36297"
+    },
+    "ci_report": {
+      "file": "artifacts/ci_report.json",
+      "sha256": "5a27c10fa4232bd3690f6370db89715f3756d502626c24980b18206a37d642f2"
+    }
+  },
+  "ci_manifest_hash": "0955c5ae0a6680367908046a796e72cd58f61916c79a9b2b6f0fca718e82044b",
+  "ci_report_hash": "b9137d18d0d37df9a82b9168a6fc40cf6194829fb63402971f06d5704badd2f7"
+}
