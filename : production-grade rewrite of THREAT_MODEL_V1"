@@ -1,0 +1,285 @@
+[1mdiff --git a/docs/THREAT_MODEL_V1.md b/docs/THREAT_MODEL_V1.md[m
+[1mindex c893af9..a1911a5 100644[m
+[1m--- a/docs/THREAT_MODEL_V1.md[m
+[1m+++ b/docs/THREAT_MODEL_V1.md[m
+[36m@@ -1,105 +1,180 @@[m
+ # ISC Core — Threat Model V1[m
+ [m
+[31m-## 1. System Overview[m
+[32m+[m[32m## 1. Purpose[m
+ [m
+[31m-ISC Core is a deterministic, tamper-evident, governance-enforced evidence engine.[m
+[32m+[m[32mThis document defines the formal threat model of ISC Core V1.[m
+ [m
+[31m-It produces reproducible CI reports and evidence bundles (Evidence Pack V2) that can be verified offline.  [m
+[31m-The core protocol is frozen (“frozen genome” discipline).  [m
+[31m-All extensions (time layer, governance, artifact binding) are modular and versioned.[m
+[32m+[m[32mIt specifies:[m
+ [m
+[31m-ISC Core does not aim to provide consensus, distributed trust, or external timestamp authority.  [m
+[31m-It provides cryptographic integrity and enforceable evidence boundaries.[m
+[32m+[m[32m- What ISC Core protects[m
+[32m+[m[32m- Against whom it provides protection[m
+[32m+[m[32m- Which attacks are mitigated by design[m
+[32m+[m[32m- Which risks remain (residual risks)[m
+[32m+[m[32m- What ISC Core explicitly does NOT guarantee (non-goals)[m
+[32m+[m
+[32m+[m[32mISC Core is a deterministic, tamper-evident, governance-enforced evidence engine designed for offline verifiability.[m
+ [m
+ ---[m
+ [m
+[31m-## 2. Protected Assets[m
+[32m+[m[32m## 2. System Overview[m
+[32m+[m
+[32m+[m[32mISC Core produces:[m
+[32m+[m
+[32m+[m[32m- A deterministic CI report (`ci_report.json`)[m
+[32m+[m[32m- A deterministic CI hash (`CI_REPORT_V1`)[m
+[32m+[m[32m- A reproducible Evidence Pack (`evidence_pack_v2.tar`) with manifest(s)[m
+[32m+[m[32m- Signed attestations (Ed25519)[m
+[32m+[m[32m- Governance lifecycle records (rotation + revocation), signed and enforced[m
+[32m+[m[32m- Artifact binding manifests (linking evidence to produced artifacts)[m
+ [m
+[31m-A1. Repository State Integrity  [m
+[31m-Source code and specifications that define the system state.[m
+[32m+[m[32mISC Core’s protocol surface under `core/` is frozen (“frozen genome” discipline).[m[41m  [m
+[32m+[m[32mAll evolutions are expected to occur in modular layers (tools/, modules/, docs/, policy files).[m
+ [m
+[31m-A2. Deterministic CI Outputs  [m
+[31m-CI report (`ci_report.json`) and CI_REPORT_V1 hash stability.[m
+[32m+[m[32mISC Core does NOT provide consensus, distributed trust, or an external timestamp authority by default.[m
+[32m+[m
+[32m+[m[32m---[m
+ [m
+[31m-A3. Evidence Pack Integrity  [m
+[31m-`evidence_pack_v2.tar`, manifest files, and included artifacts.[m
+[32m+[m[32m## 3. Protected Assets[m
+ [m
+[31m-A4. Governance Records  [m
+[31m-`rotation_commit.json`, `revocation_record.json`, associated hashes and signatures.[m
+[32m+[m[32mA1. **Repository State Integrity**[m[41m  [m
+[32m+[m[32mThe integrity of source and specifications that define the system state.[m
+ [m
+[31m-A5. Release Attestations  [m
+[31m-Signed attestation objects and declared timestamps.[m
+[32m+[m[32mA2. **Deterministic CI Outputs**[m[41m  [m
+[32m+[m[32mDeterminism of `ci_report.json` and stability of `CI_REPORT_V1`.[m
+ [m
+[31m-A6. Artifact Binding  [m
+[31m-Artifact manifest linking evidence pack and derived artifacts.[m
+[32m+[m[32mA3. **Evidence Pack Integrity**[m[41m  [m
+[32m+[m[32mIntegrity and reproducibility of `evidence_pack_v2.tar` and its manifests.[m
+ [m
+[31m-A7. Signing Keys  [m
+[31m-Private keys used for attestation and governance.[m
+[32m+[m[32mA4. **Governance Records**[m[41m  [m
+[32m+[m[32mIntegrity of `rotation_commit.json`, `revocation_record.json`, and their signed hashes.[m
+[32m+[m
+[32m+[m[32mA5. **Signed Attestations**[m[41m  [m
+[32m+[m[32mAuthenticity of signed attestation objects and their namespace bindings.[m
+[32m+[m
+[32m+[m[32mA6. **Artifact Binding**[m[41m  [m
+[32m+[m[32mCryptographic linkage between evidence bundle and produced artifacts (digests).[m
+[32m+[m
+[32m+[m[32mA7. **Signing Keys**[m[41m  [m
+[32m+[m[32mConfidentiality and correct operational use of private keys for signing.[m
+ [m
+ ---[m
+ [m
+[31m-## 3. Trust Boundaries[m
+[32m+[m[32m## 4. Trust Boundaries[m
+ [m
+[31m-TB1. Developer Environment (including Android/Termux)  [m
+[31m-TB2. Git hosting / remote repository  [m
+[31m-TB3. CI runner environment  [m
+[31m-TB4. Offline verifier environment  [m
+[31m-TB5. Distribution / deployment pipeline  [m
+[32m+[m[32mTB1. **Developer environment** (including Android/Termux)[m[41m  [m
+[32m+[m[32mTB2. **Git hosting / remote repository** (push/tag integrity vs account compromise)[m[41m  [m
+[32m+[m[32mTB3. **CI runner environment** (workflows, runners, secrets exposure)[m[41m  [m
+[32m+[m[32mTB4. **Offline verifier environment** (validator correctness, policy selection)[m[41m  [m
+[32m+[m[32mTB5. **Distribution / deployment pipeline** (registry, CDN, release assets, final mile)[m
+ [m
+[31m-Each boundary represents a location where trust assumptions change.[m
+[32m+[m[32mEach boundary marks a shift in assumptions.[m
+ [m
+ ---[m
+ [m
+[31m-## 4. Attacker Profiles[m
+[32m+[m[32m## 5. Attacker Profiles[m
+[32m+[m
+[32m+[m[32mP1. **Opportunistic external attacker**[m[41m  [m
+[32m+[m[32mAttempts tampering, replay, or social engineering without insider access.[m
+ [m
+[31m-P1. Opportunistic external attacker  [m
+[31m-P2. Malicious insider contributor  [m
+[31m-P3. Compromised CI runner  [m
+[31m-P4. Private key attacker (key theft)  [m
+[31m-P5. Distribution attacker (artifact swap)  [m
+[31m-P6. Policy manipulation attacker  [m
+[32m+[m[32mP2. **Malicious insider contributor**[m[41m  [m
+[32m+[m[32mCan commit malicious code or manipulate process.[m
+[32m+[m
+[32m+[m[32mP3. **Compromised CI runner attacker**[m[41m  [m
+[32m+[m[32mCan modify build outputs, inject artifacts, or exfiltrate secrets.[m
+[32m+[m
+[32m+[m[32mP4. **Private key attacker (key theft)**[m[41m  [m
+[32m+[m[32mObtains signing key material and produces valid-looking signatures.[m
+[32m+[m
+[32m+[m[32mP5. **Distribution attacker (artifact swap)**[m[41m  [m
+[32m+[m[32mSwaps binaries/images after CI, before users deploy.[m
+[32m+[m
+[32m+[m[32mP6. **Policy manipulation attacker**[m[41m  [m
+[32m+[m[32mAttempts to redefine “who is trusted” (allowed signers / trust anchor confusion).[m
+ [m
+ ---[m
+ [m
+[31m-## 5. Attack Surfaces[m
+[32m+[m[32m## 6. Attack Surfaces[m
+[32m+[m
+[32m+[m[32mS1. **Private key storage / operational security**[m[41m  [m
+[32m+[m[32mDevice compromise, backups, malware, accidental exfiltration.[m
+[32m+[m
+[32m+[m[32mS2. **Git tag / release manipulation**[m[41m  [m
+[32m+[m[32mTag moves, forced pushes, release asset replacement.[m
+[32m+[m
+[32m+[m[32mS3. **CI supply chain compromise**[m[41m  [m
+[32m+[m[32mRunner compromise, workflow changes, dependency poisoning.[m
+[32m+[m
+[32m+[m[32mS4. **Evidence pack tampering**[m[41m  [m
+[32m+[m[32mModifying tar contents, manifests, or included files.[m
+[32m+[m
+[32m+[m[32mS5. **Governance record tampering**[m[41m  [m
+[32m+[m[32mAltering rotation/revocation records or bypassing enforcement.[m
+ [m
+[31m-S1. Private key storage and operational security  [m
+[31m-S2. Git tag / release manipulation  [m
+[31m-S3. CI workflow supply chain compromise  [m
+[31m-S4. Evidence pack tampering  [m
+[31m-S5. Governance record tampering  [m
+[31m-S6. Rollback / replay attacks  [m
+[31m-S7. Timestamp manipulation  [m
+[31m-S8. Deployment artifact replacement  [m
+[32m+[m[32mS6. **Rollback / replay**[m[41m  [m
+[32m+[m[32mPresenting an older valid bundle as “latest”.[m
+[32m+[m
+[32m+[m[32mS7. **Timestamp manipulation**[m[41m  [m
+[32m+[m[32mFalsifying declared time without external anchor.[m
+[32m+[m
+[32m+[m[32mS8. **Deployment artifact replacement**[m[41m  [m
+[32m+[m[32mCI was correct but deployed artifact differs.[m
+ [m
+ ---[m
+ [m
+[31m-## 6. Current Mitigations[m
+[32m+[m[32m## 7. Current Mitigations (V1)[m
+[32m+[m
+[32m+[m[32mM1. **Deterministic CI hash gate**[m[41m  [m
+[32m+[m[32mCI produces a stable `CI_REPORT_V1` hash for the same state.[m
+[32m+[m
+[32m+[m[32mM2. **Reproducible Evidence Pack V2**[m[41m  [m
+[32m+[m[32mEvidence bundle is content-derived and reproducible, with SHA256 manifest.[m
+[32m+[m
+[32m+[m[32mM3. **Offline verification**[m[41m  [m
+[32m+[m[32mBundle includes all required artifacts for validation without network access.[m
+ [m
+[31m-M1. Deterministic CI hash gate  [m
+[31m-M2. Reproducible Evidence Pack V2 + SHA256 manifest  [m
+[31m-M3. Offline verification  [m
+[31m-M4. Governance rotation signature enforcement  [m
+[31m-M5. Governance revocation signature enforcement  [m
+[31m-M6. Core freeze discipline  [m
+[31m-M7. Artifact binding manifest verification  [m
+[32m+[m[32mM4. **Governance rotation enforcement**[m[41m  [m
+[32m+[m[32mRotation records are signed and verified during validation.[m
+[32m+[m
+[32m+[m[32mM5. **Governance revocation enforcement**[m[41m  [m
+[32m+[m[32mRevocation records are signed and verified; revoked keys are enforced by policy logic.[m
+[32m+[m
+[32m+[m[32mM6. **Core freeze discipline**[m[41m  [m
+[32m+[m[32mThe protocol surface is treated as frozen to prevent drift in trust semantics.[m
+[32m+[m
+[32m+[m[32mM7. **Artifact binding verification**[m[41m  [m
+[32m+[m[32mArtifact manifest(s) ensure digest-level linkage between evidence pack and derived artifacts.[m
+ [m
+ ---[m
+ [m
+[31m-## 7. Residual Risks[m
+[32m+[m[32m## 8. Residual Risks (Known Gaps)[m
+[32m+[m
+[32m+[m[32mR1. **Deployment tampering if deployed artifact digest is not enforced**[m[41m  [m
+[32m+[m[32mIf the final deployed binary/image digest is not bound and checked, the “last mile” can be swapped.[m
+ [m
+[31m-R1. Deployment tampering if deployed artifact digest is not enforced  [m
+[31m-R2. No external timestamp authority (declared time only)  [m
+[31m-R3. Key compromise before revocation allows forged but valid signatures  [m
+[31m-R4. 1-of-1 governance (single point of failure)  [m
+[31m-R5. Android/Termux operational risk if private keys are stored locally  [m
+[31m-R6. Trust anchor ambiguity if bundle policy is not clearly defined  [m
+[31m-R7. Rollback/replay risk without monotonic release indexing  [m
+[31m-R8. CI runner compromise producing valid-looking but malicious outputs  [m
+[32m+[m[32mR2. **No external timestamp authority (declared time only)**[m[41m  [m
+[32m+[m[32mAttestation time is a claim, not a public proof of existence at a given time.[m
+[32m+[m
+[32m+[m[32mR3. **Key compromise before revocation allows forged-but-valid signatures**[m[41m  [m
+[32m+[m[32mIf a key is stolen, signatures created before revocation appear valid.[m
+[32m+[m
+[32m+[m[32mR4. **1-of-1 governance (single point of failure)**[m[41m  [m
+[32m+[m[32mCryptographically valid but operationally centralized (no quorum safety).[m
+[32m+[m
+[32m+[m[32mR5. **Android/Termux operational risk if private keys are stored locally**[m[41m  [m
+[32m+[m[32mMobile devices increase compromise/exfiltration risk (malware, backups, screen capture, device loss).[m
+[32m+[m
+[32m+[m[32mR6. **Trust anchor ambiguity if bundle policy is not clearly defined**[m[41m  [m
+[32m+[m[32mIf “allowed signers” is taken from inside the bundle without an external policy model, self-validation critique applies.[m
+[32m+[m
+[32m+[m[32mR7. **Rollback/replay risk without monotonic release indexing**[m[41m  [m
+[32m+[m[32mOlder valid evidence may be replayed as “latest” without an anti-rollback signal.[m
+[32m+[m
+[32m+[m[32mR8. **CI runner compromise producing valid-looking but malicious outputs**[m[41m  [m
+[32m+[m[32mA compromised runner can emit consistent hashes for malicious outputs if it controls the build process.[m
+ [m
+ ---[m
+ [m
+[31m-## 8. Non-Goals[m
+[32m+[m[32m## 9. Non-Goals[m
+ [m
+ ISC Core is not:[m
+ [m
+[36m@@ -109,24 +184,25 @@[m [mISC Core is not:[m
+ - A hardware root-of-trust system[m
+ - A guarantee of software behavioral correctness[m
+ [m
+[32m+[m[32mISC Core provides cryptographic integrity + enforceable lifecycle rules, not absolute correctness or consensus truth.[m
+[32m+[m
+ ---[m
+ [m
+[31m-## 9. Security Posture Summary[m
+[32m+[m[32m## 10. Security Posture Summary (V1)[m
+ [m
+ ISC Core guarantees deterministic build integrity, tamper-evident packaging, signed attestations, and enforceable governance lifecycle controls.[m
+ [m
+[31m-It assumes private key security and trusted policy definitions.[m
+[32m+[m[32mISC Core assumes private key security and a clearly defined trust anchor / policy model.[m
+ [m
+[31m-External time anchoring, multi-party quorum governance, hardware-backed keys, and deployment digest enforcement are future hardening paths and not part of V1 guarantees.[m
+[32m+[m[32mExternal time anchoring, multi-party quorum governance, hardware-backed keys, and deployment digest enforcement are future hardening paths and are not part of V1 guarantees.[m
+ [m
+ ---[m
+ [m
+[31m-## 10. Threat-Driven Roadmap[m
+[31m-[m
+[31m-1. Clarify policy trust anchor model  [m
+[31m-2. Add anti-rollback / monotonic release index  [m
+[31m-3. Enforce deployment artifact digest binding  [m
+[31m-4. Improve key operational security (hardware-backed keys or dedicated environment)  [m
+[31m-5. Optional external timestamp anchoring  [m
+[31m-6. Future multi-signer quorum governance  [m
+[32m+[m[32m## 11. Threat-Driven Roadmap (Ordered)[m
+ [m
+[32m+[m[32m1. Clarify policy trust anchor model (operator policy vs bundle snapshot)[m
+[32m+[m[32m2. Add anti-rollback / monotonic release index[m
+[32m+[m[32m3. Enforce deployment artifact digest binding[m
+[32m+[m[32m4. Improve key operational security (hardware-backed keys or dedicated environment)[m
+[32m+[m[32m5. Optional external timestamp anchoring[m
+[32m+[m[32m6. Future multi-signer quorum governance[m

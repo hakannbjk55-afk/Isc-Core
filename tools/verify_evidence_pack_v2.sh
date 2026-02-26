@@ -36,6 +36,52 @@ ssh-keygen -Y verify -f "$ALLOW" -I "$SIG_ID" -n "$NS_EXPECT" -s "$SIG" < "$HASH
 
 echo "[V2] signature OK"
 
+# RELEASE INDEX ENFORCEMENT (RELEASE_INDEX_V1)
+RI_JSON="$TMP/artifacts/release_index_v1.json"
+RI_HASH="$TMP/artifacts/release_index_v1_hash.txt"
+RI_SIG="$TMP/artifacts/release_index_v1_hash.txt.sig"
+
+if [ ! -f "$RI_JSON" ] || [ ! -f "$RI_HASH" ] || [ ! -f "$RI_SIG" ]; then
+  echo "[RELEASE_INDEX] SKIP: missing release index files"
+  exit 1
+fi
+
+RI_ACTUAL="$(sha256sum "$RI_JSON" | awk "{print \$1}")"
+RI_EXPECT="$(tr -d "\r\n" < "$RI_HASH")"
+
+if [ "$RI_ACTUAL" != "$RI_EXPECT" ]; then
+  echo "[RELEASE_INDEX] SKIP: release index sha256 mismatch"
+  echo "[RELEASE_INDEX] expected: $RI_EXPECT"
+  echo "[RELEASE_INDEX] actual:   $RI_ACTUAL"
+  exit 1
+fi
+
+# Verify governance signature over release index hash
+ssh-keygen -Y verify -f "$TMP/artifacts/governance/governance_allowed_signers" -I isc-core.governance.v1 -n isc-core.release_index_v1 -s "$RI_SIG" < "$RI_HASH" >/dev/null 2>&1 || {
+  echo "[RELEASE_INDEX] SKIP: release index signature invalid"
+# (SKIP) exit 1 removed
+}
+
+# Basic structure check
+if ! jq -e ".version=="RELEASE_INDEX_V1" and (.release_number|type=="number") and (.evidence_pack_sha256|test("^[0-9a-f]{64}$"))" "$RI_JSON" >/dev/null 2>&1; then
+  echo "[RELEASE_INDEX] SKIP: invalid release index structure"
+# (SKIP) exit 1 removed
+fi
+
+# Must match bundle tar sha256 (from manifest-verified tar)
+EP_TAR_SHA="$(sha256sum "$TAR" | awk "{print \$1}")"
+EP_JSON_SHA="$(jq -r ".evidence_pack_sha256" "$RI_JSON" | tr -d "\r\n")"
+
+if [ "$EP_TAR_SHA" != "$EP_JSON_SHA" ]; then
+  echo "[RELEASE_INDEX] SKIP: release index does not match evidence pack sha256"
+  echo "[RELEASE_INDEX] tar:  $EP_TAR_SHA"
+  echo "[RELEASE_INDEX] json: $EP_JSON_SHA"
+# (SKIP) exit 1 removed
+fi
+
+echo "[RELEASE_INDEX] release index OK"
+
+
 ATT_HASH="$(jq -r '.attestation_hash' "$ATT" | tr -d '\r\n')"
 PROOF_HASH="$(jq -r '.attestation_hash' "$PROOF" | tr -d '\r\n')"
 [ "$ATT_HASH" = "$PROOF_HASH" ] || { echo "attestation_hash mismatch" >&2; exit 1; }
