@@ -1,0 +1,4 @@
+{
+  "version": "1.0",
+  "rules": ["R01_SCHEMA_VALID", "R02_HASH_ALLOWLIST", "R03_TIMESTAMP_FORMAT", "R04_SIGNATURE_PRESENT"]
+}

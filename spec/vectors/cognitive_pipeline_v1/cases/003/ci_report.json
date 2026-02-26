@@ -1,0 +1,38 @@
+{
+  "spec_id": "ISC_COGNITIVE_PIPELINE_V1",
+  "spec_version": "1.0.0",
+  "case_id": "CPV1-CASE-00003",
+  "stage": "observe",
+  "steps": [
+    {
+      "step": "env_lock",
+      "status": "OK",
+      "digest": "6dac7922149861fea3cd5c5cae9b3a8b9d1aaa4f644154e69e01b95bdbcff7f9"
+    },
+    {
+      "step": "input_canon",
+      "status": "OK",
+      "digest": "7e7a7bb538b906b77b3f9e75db0927de1a8161ad201a3af1c94f44d8109eb8f1",
+      "inputs": {
+        "policy": "341723b7a9b19683f7fcd227b920b7f651a918f070bf41b29161494ade9b8db2",
+        "payload": "655279f3ddff19bcc6b0f720a654263f246dbb89fdc95674c5f314405b511cb3"
+      }
+    },
+    {
+      "step": "state_snapshot",
+      "status": "OK",
+      "digest": "a7ef19a5901bcf96aafa2e15330fd4213cee5ae982c1bba480b80566badad9eb"
+    },
+    {
+      "step": "policy_decision",
+      "status": "PENDING",
+      "digest": "b43d9a3b31678ff8848e9a4f9c4fe46ed3ca21bcfc7e709e10981fbc7a30ff61"
+    },
+    {
+      "step": "artifact_emit",
+      "status": "PENDING",
+      "digest": "08350d4b11f0bdcd1338cdd0ad000dc1ca65778ec8cd3c11eda41b8fc580b66b"
+    }
+  ],
+  "pipeline_digest": "d4edcc0bfaf20cda6083c6bf2d1aeb3666808700effceec568aa2fd77f07afbf"
+}

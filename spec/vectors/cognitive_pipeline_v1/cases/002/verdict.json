@@ -1,0 +1,24 @@
+{
+  "case_id": "CPV1-CASE-00002",
+  "verdict": "DENY",
+  "rules_evaluated": [
+    {
+      "rule_id": "R01_SCHEMA_VALID",
+      "result": "PASS"
+    },
+    {
+      "rule_id": "R02_HASH_ALLOWLIST",
+      "result": "PASS"
+    },
+    {
+      "rule_id": "R03_TIMESTAMP_FORMAT",
+      "result": "PASS"
+    },
+    {
+      "rule_id": "R04_SIGNATURE_PRESENT",
+      "result": "FAIL"
+    }
+  ],
+  "canonical_input_hash": "e4a347e0cbe5e4d750ee2cb2f54f15c71417a8112dd88a7bd557f208fb23b6cf",
+  "verdict_hash": "f213e0e1c161c13b9839aa19785724eab326f9aee98f525ae0532f79d586584f"
+}
