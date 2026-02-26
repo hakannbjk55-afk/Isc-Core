@@ -30,3 +30,18 @@ Verification works fully offline.
 ## Latest Stable Release
 
 https://github.com/hakannbjk55-afk/Isc-Core/releases/tag/v1.7.0-hardening-baseline
+
+---
+
+## Seeking External Review
+
+ISC Core is stable in CI enforcement and deterministic artifact verification.
+
+External critique is welcome, especially regarding:
+
+- Threat model boundaries
+- CI trust assumptions
+- Supply chain attack surfaces
+- Hash determinism edge cases
+
+Open issues or discussions are encouraged.
