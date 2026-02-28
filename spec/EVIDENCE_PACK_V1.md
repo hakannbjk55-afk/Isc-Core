@@ -1,56 +1,108 @@
-# Evidence Pack v1
+# Evidence Pack v1.0
 
-This document defines a deterministic, portable evidence package format.
+A BuildSeal evidence pack contains integrity, build context, and chain anchoring
+proof for a build artifact in a single portable file. Third-party verification
+does not depend on the SaaS service being online.
 
-## Goals
-- Platform-independent verification
-- Deterministic packaging (same inputs -> same bytes -> same hash)
-- Minimal surface area
+---
 
-## Pack contents (required)
-- artifacts/ci_report.json
-- spec/core/VERSION
-- test_vectors/manifest.json
-- test_vectors/*.json
-- tools/ci_policy.sh (policy snapshot)
-- tools/version_gate.sh
-- tools/phi_tripwire.sh
- - registry/registry_snapshot.json
+## Top-Level Schema
 
-## Deterministic packaging rules
-- Archive format: tar
-- File order: lexicographic by path
-- Metadata normalization:
-  - uid=0, gid=0
-  - uname="", gname=""
-  - mtime=0
-  - mode preserved from working tree
-- Compression: none (plain .tar)
+Required fields:
 
-## Output
-- artifacts/evidence_pack_v1.tar
-- artifacts/evidence_pack_v1.sha256 (sha256 of the tar bytes)
+- version
+- type
+- issued_at_utc
+- artifact
+- build
+- binding
+- signing
+- isc
+- checkpoint
 
-## Expected layout (offline verification)
+Example:
 
-The verifier expects the following exact layout:
+{
+  "version": "1",
+  "type": "buildseal.evidence_pack",
+  "issued_at_utc": "2026-02-28T14:32:01Z",
 
-- artifacts/evidence_pack_v1.tar
-- artifacts/evidence_pack_v1.sha256
+  "artifact": {
+    "name": "myapp.bin",
+    "type": "binary",
+    "size_bytes": 1833120,
+    "hashes": [
+      {"alg": "sha256", "hex": "a3f9c1..."}
+    ],
+    "content_id": "sha256:a3f9c1..."
+  },
 
-The SHA256 file MUST reference the tar file using the exact path:
+  "build": {
+    "builder": {
+      "id": "ci:github-actions",
+      "repo": "org/repo",
+      "run_id": "123",
+      "ref": "refs/heads/main",
+      "commit": "deadbeef..."
+    },
+    "environment": {
+      "os": "ubuntu-22.04",
+      "arch": "x86_64"
+    },
+    "toolchain": {
+      "buildseal": "1.0.0",
+      "isc_core": "1.x"
+    }
+  },
 
-artifacts/evidence_pack_v1.tar
+  "binding": {
+    "tbs_alg": "sha256",
+    "tbs_fields": [
+      "version","type","issued_at_utc",
+      "artifact","build"
+    ],
+    "tbs_digest_hex": "9c01ab..."
+  },
 
-## Example verification (offline)
+  "signing": {
+    "scheme": "ed25519",
+    "public_key": {"kty":"OKP","crv":"Ed25519","x_b64u":"..."},
+    "signature_b64u": "...",
+    "signed_digest_hex": "9c01ab..."
+  },
 
-From the directory root:
+  "isc": {
+    "network": "isc-mainnet",
+    "record": {
+      "record_type": "evidence_anchor_v1",
+      "digest_hex": "9c01ab...",
+      "height": 4821,
+      "signer": "governance:primary"
+    },
+    "node_hint": "https://node.buildseal.io"
+  },
 
-sha256sum -c artifacts/evidence_pack_v1.sha256
+  "checkpoint": {
+    "adapter": "eth-l2-base",
+    "chain_id": 8453,
+    "tx_id": "0xabc...",
+    "block": 18420001,
+    "merkle_root_hex": "0xdef...",
+    "batch": {
+      "size": 1000,
+      "index": 42
+    }
+  }
+}
 
-## Verification script
+---
 
-Use:
+## Verification Steps
 
-tools/verify_evidence_pack_v1.sh
+1. Recompute `tbs_digest_hex` using canonical encoding.
+2. Verify the signature over the digest.
+3. Validate ISC record digest equality.
+4. Verify the Merkle root on-chain via the specified adapter.
+5. Recompute the artifact hash and compare.
 
+Output: VALID or INVALID.
