@@ -106,3 +106,34 @@ Example:
 5. Recompute the artifact hash and compare.
 
 Output: VALID or INVALID.
+---
+
+## Ethereum L2 Anchor Contract (v1)
+
+For eth-l2 adapters, anchoring MUST target a dedicated anchor contract.
+
+checkpoint.contract (string, required for eth-l2 adapters):
+- EVM address of the deployed Anchor contract
+- Verifier MUST ensure tx.to == checkpoint.contract
+
+Recommended minimal interface:
+
+function anchor(bytes32 merkleRoot, uint64 batchId, bytes32 metaHash) external;
+
+Event:
+
+event Anchored(
+    bytes32 merkleRoot,
+    uint64 batchId,
+    bytes32 metaHash,
+    address indexed sender,
+    uint256 blockNumber
+);
+
+Verification rule:
+- The transaction MUST call the anchor() function.
+- The emitted Anchored event MUST contain the same merkleRoot as in the evidence pack.
+git add spec/EVIDENCE_PACK_V1.md
+git commit -m "spec: add Ethereum L2 anchor contract requirements"
+pwd
+git rev-parse --show-toplevel
