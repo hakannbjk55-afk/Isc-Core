@@ -50,7 +50,7 @@ const CONFIG = {
   contract: "0x0a93c4cF810F68e8FBeEa63ddb36d0f06da96bFE",
   explorerTx: tx => `https://sepolia.basescan.org/tx/${tx}`,
   explorerAddr: addr => `https://sepolia.basescan.org/address/${addr}`,
-  eventAbi: ["event Anchored(bytes32 indexed merkleRoot, uint64 indexed batchId, bytes32 metaHash, address sender, uint256 blockNumber)"]
+  eventAbi: ["event Anchored(bytes32 indexed merkleRoot, uint256 indexed batchId, bytes32 metaHash, address sender)"]
 };
 
 const $ = id => document.getElementById(id);
