@@ -1,0 +1,6 @@
+{
+  "rewrites": [
+    { "source": "/release/:tx", "destination": "/verify.html" },
+    { "source": "/release/:tx/(.*)", "destination": "/verify.html" }
+  ]
+}
