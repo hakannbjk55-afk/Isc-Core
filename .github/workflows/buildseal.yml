@@ -1,0 +1,15 @@
+name: BuildSeal
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+jobs:
+  seal:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hakannbjk55-afk/buildseal-action@v1
+        with:
+          artifact: './contracts/BuildSealAnchor.sol'
+          private_key: ${{ secrets.BUILDSEAL_KEY }}
