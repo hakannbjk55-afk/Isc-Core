@@ -1,8 +1,8 @@
 use sha2::{Sha256, Digest};
-use std::collections::HashMap;
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use std::process;
+use ssh_key::{PublicKey, SshSig};
 
 #[derive(Debug)]
 enum VerifyError {
@@ -10,6 +10,8 @@ enum VerifyError {
     HashMismatch(String),
     ParseError(String),
     PackIdentityMismatch,
+    GovernanceError(String),
+    SignatureError(String),
     IoError(String),
 }
 
@@ -19,7 +21,9 @@ impl std::fmt::Display for VerifyError {
             VerifyError::MissingFile(p) => write!(f, "Missing required file: {}", p),
             VerifyError::HashMismatch(p) => write!(f, "Hash mismatch: {}", p),
             VerifyError::ParseError(e) => write!(f, "Parse error: {}", e),
-            VerifyError::PackIdentityMismatch => write!(f, "Pack identity mismatch: pack_hash does not match"),
+            VerifyError::PackIdentityMismatch => write!(f, "Pack identity mismatch"),
+            VerifyError::GovernanceError(e) => write!(f, "Governance error: {}", e),
+            VerifyError::SignatureError(e) => write!(f, "Signature error: {}", e),
             VerifyError::IoError(e) => write!(f, "IO error: {}", e),
         }
     }
@@ -44,10 +48,9 @@ fn extract_tar(tar_path: &Path, out_dir: &Path) -> Result<(), VerifyError> {
     for entry in archive.entries().map_err(|e| VerifyError::IoError(e.to_string()))? {
         let mut entry = entry.map_err(|e| VerifyError::IoError(e.to_string()))?;
         let entry_path = entry.path().map_err(|e| VerifyError::IoError(e.to_string()))?;
-        // Path traversal protection
         let entry_str = entry_path.to_string_lossy();
         if entry_str.contains("..") || entry_str.starts_with('/') {
-            return Err(VerifyError::ParseError(format!("Unsafe path in tar: {}", entry_str)));
+            return Err(VerifyError::ParseError(format!("Unsafe path: {}", entry_str)));
         }
         entry.unpack_in(out_dir).map_err(|e| VerifyError::IoError(e.to_string()))?;
     }
@@ -69,113 +72,180 @@ fn parse_manifest(manifest_path: &Path) -> Result<Vec<(String, String)>, VerifyE
         let hash = parts[0].trim_start_matches("sha256:").to_string();
         let path = parts[1].to_string();
         if paths_seen.contains(&path) {
-            return Err(VerifyError::ParseError(format!("Duplicate path in manifest: {}", path)));
+            return Err(VerifyError::ParseError(format!("Duplicate path: {}", path)));
         }
         paths_seen.insert(path.clone());
         entries.push((hash, path));
     }
-    // Sort by path for canonical ordering
     entries.sort_by(|a, b| a.1.cmp(&b.1));
     Ok(entries)
 }
 
-fn verify_pack(pack_path: &Path) -> Result<(), VerifyError> {
-    // Extract to temp dir
-    let tmp = tempfile::tempdir().map_err(|e| VerifyError::IoError(e.to_string()))?;
-    extract_tar(pack_path, tmp.path())?;
-
-    // Find base dir (tar may have a top-level dir)
-    let base = tmp.path().to_path_buf();
-
-    // Check required files
-    let required = ["artifacts/ci_report.json"];
-    for req in &required {
-        let p = base.join(req);
-        if !p.exists() {
-            return Err(VerifyError::MissingFile(req.to_string()));
+fn parse_allowed_signers(path: &Path) -> Result<Vec<PublicKey>, VerifyError> {
+    let content = fs::read_to_string(path)
+        .map_err(|e| VerifyError::IoError(e.to_string()))?;
+    let mut keys = Vec::new();
+    let mut seen = std::collections::HashSet::new();
+    for line in content.lines() {
+        let line = line.trim();
+        if line.is_empty() || line.starts_with('#') { continue; }
+        let parts: Vec<&str> = line.splitn(3, ' ').collect();
+        if parts.len() < 3 { continue; }
+        let key_str = format!("{} {}", parts[1], parts[2].split_whitespace().next().unwrap_or(""));
+        if seen.contains(&key_str) {
+            return Err(VerifyError::GovernanceError(format!("Duplicate key: {}", key_str)));
+        }
+        seen.insert(key_str.clone());
+        if let Ok(pk) = key_str.parse::<PublicKey>() {
+            keys.push(pk);
         }
     }
+    Ok(keys)
+}
 
-    // Find manifest
-    let manifest_candidates = [
-        "artifacts/evidence_pack_manifest_v2.sha256",
-        "artifacts/evidence_pack_manifest_v1.sha256",
-        "content_manifest.sha256",
-    ];
-    let manifest_path = manifest_candidates.iter()
-        .map(|p| base.join(p))
-        .find(|p| p.exists())
-        .ok_or_else(|| VerifyError::MissingFile("content_manifest.sha256".to_string()))?;
+fn parse_revocation(path: &Path) -> Result<Vec<String>, VerifyError> {
+    let content = fs::read_to_string(path)
+        .map_err(|e| VerifyError::IoError(e.to_string()))?;
+    let v: serde_json::Value = serde_json::from_str(&content)
+        .map_err(|e| VerifyError::ParseError(e.to_string()))?;
+    let mut revoked = Vec::new();
+    if let Some(arr) = v.as_array() {
+        for item in arr {
+            if let Some(s) = item.as_str() {
+                revoked.push(s.to_string());
+            }
+        }
+    }
+    Ok(revoked)
+}
 
-    // Parse and verify manifest
+fn verify_signature(sig_path: &Path, payload_path: &Path, allowed_keys: &[PublicKey]) -> Result<(), VerifyError> {
+    if !payload_path.exists() {
+        return Err(VerifyError::SignatureError(format!(
+            "Payload missing: {}", sig_path.display()
+        )));
+    }
+    let sig_bytes = fs::read(sig_path).map_err(|e| VerifyError::IoError(e.to_string()))?;
+    let sig_str = String::from_utf8_lossy(&sig_bytes);
+    let ssh_sig = SshSig::from_pem(&*sig_str)
+        .map_err(|e| VerifyError::SignatureError(format!("Invalid sig format: {}", e)))?;
+    let payload = fs::read(payload_path).map_err(|e| VerifyError::IoError(e.to_string()))?;
+    let namespace = ssh_sig.namespace();
+    for pk in allowed_keys {
+        if pk.verify(namespace, &payload, &ssh_sig).is_ok() {
+            return Ok(());
+        }
+    }
+    Err(VerifyError::SignatureError(format!(
+        "No valid signature for: {}", payload_path.file_name().unwrap_or_default().to_string_lossy()
+    )))
+}
+
+fn verify_pack(pack_path: &Path) -> Result<(), VerifyError> {
+    let tmp = tempfile::tempdir().map_err(|e| VerifyError::IoError(e.to_string()))?;
+    extract_tar(pack_path, tmp.path())?;
+    let base = tmp.path().to_path_buf();
+
+    let ci_report_path = base.join("artifacts/ci_report.json");
+    if !ci_report_path.exists() {
+        return Err(VerifyError::MissingFile("artifacts/ci_report.json".to_string()));
+    }
+
+    let manifest_path = ["artifacts/evidence_pack_manifest_v2.sha256",
+                          "artifacts/evidence_pack_manifest_v1.sha256",
+                          "content_manifest.sha256"]
+        .iter().map(|p| base.join(p)).find(|p| p.exists())
+        .ok_or_else(|| VerifyError::MissingFile("content_manifest".to_string()))?;
+
     let entries = parse_manifest(&manifest_path)?;
     let manifest_name = manifest_path.file_name().unwrap().to_string_lossy().to_string();
 
     for (expected_hash, rel_path) in &entries {
-        // Skip manifest itself
         if rel_path.ends_with(&manifest_name) { continue; }
         let file_path = base.join(rel_path);
         if !file_path.exists() {
-            eprintln!("  WARN: missing file: {}", rel_path); continue;
+            eprintln!("  WARN: missing file: {}", rel_path);
+            continue;
         }
         let computed = sha256_file(&file_path)?;
         if &computed != expected_hash {
             return Err(VerifyError::HashMismatch(rel_path.clone()));
         }
     }
-
     println!("Content integrity:  valid");
 
-    // Compute content_hash
-    let manifest_raw = fs::read(&manifest_path)
-        .map_err(|e| VerifyError::IoError(e.to_string()))?;
+    let manifest_raw = fs::read(&manifest_path).map_err(|e| VerifyError::IoError(e.to_string()))?;
     let content_hash = sha256_bytes(&manifest_raw);
-
-    // Load ci_report.json
-    let ci_report_path = base.join("artifacts/ci_report.json");
-    let ci_raw = fs::read(&ci_report_path)
-        .map_err(|e| VerifyError::IoError(e.to_string()))?;
-
-    // Compute meta_hash
+    let ci_raw = fs::read(&ci_report_path).map_err(|e| VerifyError::IoError(e.to_string()))?;
     let meta_hash = sha256_bytes(&ci_raw);
+    let pack_hash_expected = sha256_bytes(format!("{}{}", meta_hash, content_hash).as_bytes());
 
-    // Compute expected pack_hash
-    let combined = format!("{}{}", meta_hash, content_hash);
-    let pack_hash_expected = sha256_bytes(combined.as_bytes());
-
-    // Check pack_hash in ci_report.json if present
     if let Ok(ci_json) = serde_json::from_slice::<serde_json::Value>(&ci_raw) {
-        if let Some(stored_hash) = ci_json.get("pack_hash").and_then(|v| v.as_str()) {
-            let stored = stored_hash.trim_start_matches("sha256:");
-            if stored != pack_hash_expected {
+        if let Some(stored) = ci_json.get("pack_hash").and_then(|v| v.as_str()) {
+            if stored.trim_start_matches("sha256:") != pack_hash_expected {
                 return Err(VerifyError::PackIdentityMismatch);
             }
         }
     }
-
     println!("Pack identity:      valid");
-    println!("  meta_hash:        {}", &meta_hash[..16]);
-    println!("  content_hash:     {}", &content_hash[..16]);
-    println!("  pack_hash:        {}", &pack_hash_expected[..16]);
+
+    // Governance keys
+    let gov_signers_path = base.join("artifacts/governance/governance_allowed_signers");
+    if !gov_signers_path.exists() {
+        return Err(VerifyError::MissingFile("governance/governance_allowed_signers".to_string()));
+    }
+    let gov_keys = parse_allowed_signers(&gov_signers_path)?;
+    let revocation_path = base.join("artifacts/governance/revocation_record.json");
+    let revoked = if revocation_path.exists() {
+        parse_revocation(&revocation_path)?
+    } else { vec![] };
+
+    println!("Governance:         {} key(s), {} revoked", gov_keys.len(), revoked.len());
+
+    // Time layer keys
+    let time_signers_path = base.join("artifacts/time_layer_v1_signed/keys/allowed_signers");
+    let time_keys = if time_signers_path.exists() {
+        parse_allowed_signers(&time_signers_path)?
+    } else { vec![] };
+
+    // Verify governance signatures
+    let gov_sigs = [
+        ("artifacts/governance/rotation_commit_hash.txt.sig",
+         "artifacts/governance/rotation_commit_hash.txt"),
+        ("artifacts/governance/revocation_record_hash.txt.sig",
+         "artifacts/governance/revocation_record_hash.txt"),
+    ];
+    let mut sig_count = 0;
+    for (sig_rel, payload_rel) in &gov_sigs {
+        let sig_path = base.join(sig_rel);
+        if !sig_path.exists() { continue; }
+        verify_signature(&sig_path, &base.join(payload_rel), &gov_keys)?;
+        sig_count += 1;
+    }
+
+    // Verify time layer signature
+    let tl_sig = base.join("artifacts/time_layer_v1_signed/attestation_hash.txt.sig");
+    let tl_payload = base.join("artifacts/time_layer_v1_signed/attestation_hash.txt");
+    if tl_sig.exists() && !time_keys.is_empty() {
+        verify_signature(&tl_sig, &tl_payload, &time_keys)?;
+        sig_count += 1;
+    }
+
+    println!("Signatures:         {} verified", sig_count);
+    println!("Governance:         valid");
 
     Ok(())
 }
 
 fn main() {
     let args: Vec<String> = std::env::args().collect();
-
     if args.len() < 2 {
         eprintln!("isc_verify v0.2.0");
-        eprintln!("Usage:");
-        eprintln!("  isc_verify --version");
-        eprintln!("  isc_verify <evidence_pack.tar>");
+        eprintln!("Usage: isc_verify <evidence_pack.tar>");
         process::exit(2);
     }
-
     match args[1].as_str() {
-        "--version" | "-V" => {
-            println!("isc_verify {}", env!("CARGO_PKG_VERSION"));
-        }
+        "--version" | "-V" => println!("isc_verify {}", env!("CARGO_PKG_VERSION")),
         path => {
             let pack_path = Path::new(path);
             if !pack_path.exists() {
