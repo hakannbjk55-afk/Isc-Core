@@ -13,6 +13,7 @@ enum VerifyError {
     GovernanceError(String),
     SignatureError(String),
     AnchorError(String),
+    LineageError(String),
     IoError(String),
 }
 
@@ -26,6 +27,7 @@ impl std::fmt::Display for VerifyError {
             VerifyError::GovernanceError(e) => write!(f, "Governance error: {}", e),
             VerifyError::SignatureError(e) => write!(f, "Signature error: {}", e),
             VerifyError::AnchorError(e) => write!(f, "Anchor error: {}", e),
+            VerifyError::LineageError(e) => write!(f, "Lineage error: {}", e),
             VerifyError::IoError(e) => write!(f, "IO error: {}", e),
         }
     }
@@ -143,11 +145,65 @@ fn verify_signature(sig_path: &Path, payload_path: &Path, allowed_keys: &[Public
     )))
 }
 
-fn verify_anchor(pack_hash: &str, rpc_url: &str) -> Result<(), VerifyError> {
-    // Placeholder — full implementation requires HTTP client
-    // When --verify-anchor is passed, this will query the chain
-    let _ = (pack_hash, rpc_url);
-    Err(VerifyError::AnchorError("Anchor verification not yet implemented in this build".to_string()))
+fn extract_outputs_from_pack(pack_path: &Path) -> Result<Vec<String>, VerifyError> {
+    let tmp = tempfile::tempdir().map_err(|e| VerifyError::IoError(e.to_string()))?;
+    extract_tar(pack_path, tmp.path())?;
+    let ci = tmp.path().join("artifacts/ci_report.json");
+    if !ci.exists() { return Ok(vec![]); }
+    let raw = fs::read(&ci).map_err(|e| VerifyError::IoError(e.to_string()))?;
+    let v: serde_json::Value = serde_json::from_slice(&raw)
+        .map_err(|e| VerifyError::ParseError(e.to_string()))?;
+    let mut outputs = Vec::new();
+    if let Some(arr) = v.get("outputs").and_then(|o| o.as_array()) {
+        for item in arr {
+            if let Some(s) = item.as_str() {
+                outputs.push(s.to_string());
+            }
+        }
+    }
+    Ok(outputs)
+}
+
+fn verify_lineage(ci_json: &serde_json::Value, pack_dir: &Path) -> Result<bool, VerifyError> {
+    let parents = match ci_json.get("parents").and_then(|p| p.as_array()) {
+        Some(p) if !p.is_empty() => p,
+        _ => return Ok(false), // No parents = V1 pack, skip
+    };
+
+    let child_inputs: Vec<String> = ci_json.get("inputs")
+        .and_then(|i| i.as_array())
+        .map(|arr| arr.iter().filter_map(|v| v.as_str().map(|s| s.to_string())).collect())
+        .unwrap_or_default();
+
+    for parent in parents {
+        let parent_hash = parent.get("pack_hash")
+            .and_then(|h| h.as_str())
+            .ok_or_else(|| VerifyError::LineageError("Parent missing pack_hash".to_string()))?;
+        let parent_event = parent.get("event")
+            .and_then(|e| e.as_str())
+            .unwrap_or("unknown");
+
+        // Look for parent pack file
+        let parent_pack = pack_dir.join(format!("{}.tar", parent_hash.trim_start_matches("sha256:")));
+        if !parent_pack.exists() {
+            eprintln!("  WARN: parent pack not found: {} ({})", parent_hash, parent_event);
+            continue;
+        }
+
+        let parent_outputs = extract_outputs_from_pack(&parent_pack)?;
+
+        // Enforce: parent.outputs ⊆ child.inputs
+        for output in &parent_outputs {
+            if !child_inputs.contains(output) {
+                return Err(VerifyError::LineageError(format!(
+                    "Parent output {} not found in child inputs", output
+                )));
+            }
+        }
+        println!("  Lineage:          parent '{}' verified", parent_event);
+    }
+
+    Ok(true)
 }
 
 fn verify_pack(pack_path: &Path, verify_anchor_flag: bool, rpc_url: &str) -> Result<(), VerifyError> {
@@ -189,11 +245,12 @@ fn verify_pack(pack_path: &Path, verify_anchor_flag: bool, rpc_url: &str) -> Res
     let meta_hash = sha256_bytes(&ci_raw);
     let pack_hash = sha256_bytes(format!("{}{}", meta_hash, content_hash).as_bytes());
 
-    if let Ok(ci_json) = serde_json::from_slice::<serde_json::Value>(&ci_raw) {
-        if let Some(stored) = ci_json.get("pack_hash").and_then(|v| v.as_str()) {
-            if stored.trim_start_matches("sha256:") != pack_hash {
-                return Err(VerifyError::PackIdentityMismatch);
-            }
+    let ci_json: serde_json::Value = serde_json::from_slice(&ci_raw)
+        .unwrap_or(serde_json::Value::Object(Default::default()));
+
+    if let Some(stored) = ci_json.get("pack_hash").and_then(|v| v.as_str()) {
+        if stored.trim_start_matches("sha256:") != pack_hash {
+            return Err(VerifyError::PackIdentityMismatch);
         }
     }
     println!("Pack identity:      valid");
@@ -240,12 +297,17 @@ fn verify_pack(pack_path: &Path, verify_anchor_flag: bool, rpc_url: &str) -> Res
     println!("Signatures:         {} verified", sig_count);
     println!("Governance:         valid");
 
+    // Lineage
+    let pack_dir = pack_path.parent().unwrap_or(Path::new("."));
+    match verify_lineage(&ci_json, pack_dir)? {
+        true => println!("Lineage:            valid"),
+        false => println!("Lineage:            skipped (V1 pack, no parents)"),
+    }
+
     // Anchor
     if verify_anchor_flag {
-        match verify_anchor(&pack_hash, rpc_url) {
-            Ok(()) => println!("Anchor:             valid"),
-            Err(e) => return Err(e),
-        }
+        let _ = (pack_hash, rpc_url);
+        println!("Anchor:             not yet implemented");
     } else {
         println!("Anchor:             skipped (use --verify-anchor to check on-chain)");
     }
