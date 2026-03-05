@@ -12,6 +12,7 @@ enum VerifyError {
     PackIdentityMismatch,
     GovernanceError(String),
     SignatureError(String),
+    AnchorError(String),
     IoError(String),
 }
 
@@ -24,6 +25,7 @@ impl std::fmt::Display for VerifyError {
             VerifyError::PackIdentityMismatch => write!(f, "Pack identity mismatch"),
             VerifyError::GovernanceError(e) => write!(f, "Governance error: {}", e),
             VerifyError::SignatureError(e) => write!(f, "Signature error: {}", e),
+            VerifyError::AnchorError(e) => write!(f, "Anchor error: {}", e),
             VerifyError::IoError(e) => write!(f, "IO error: {}", e),
         }
     }
@@ -141,7 +143,14 @@ fn verify_signature(sig_path: &Path, payload_path: &Path, allowed_keys: &[Public
     )))
 }
 
-fn verify_pack(pack_path: &Path) -> Result<(), VerifyError> {
+fn verify_anchor(pack_hash: &str, rpc_url: &str) -> Result<(), VerifyError> {
+    // Placeholder — full implementation requires HTTP client
+    // When --verify-anchor is passed, this will query the chain
+    let _ = (pack_hash, rpc_url);
+    Err(VerifyError::AnchorError("Anchor verification not yet implemented in this build".to_string()))
+}
+
+fn verify_pack(pack_path: &Path, verify_anchor_flag: bool, rpc_url: &str) -> Result<(), VerifyError> {
     let tmp = tempfile::tempdir().map_err(|e| VerifyError::IoError(e.to_string()))?;
     extract_tar(pack_path, tmp.path())?;
     let base = tmp.path().to_path_buf();
@@ -178,18 +187,18 @@ fn verify_pack(pack_path: &Path) -> Result<(), VerifyError> {
     let content_hash = sha256_bytes(&manifest_raw);
     let ci_raw = fs::read(&ci_report_path).map_err(|e| VerifyError::IoError(e.to_string()))?;
     let meta_hash = sha256_bytes(&ci_raw);
-    let pack_hash_expected = sha256_bytes(format!("{}{}", meta_hash, content_hash).as_bytes());
+    let pack_hash = sha256_bytes(format!("{}{}", meta_hash, content_hash).as_bytes());
 
     if let Ok(ci_json) = serde_json::from_slice::<serde_json::Value>(&ci_raw) {
         if let Some(stored) = ci_json.get("pack_hash").and_then(|v| v.as_str()) {
-            if stored.trim_start_matches("sha256:") != pack_hash_expected {
+            if stored.trim_start_matches("sha256:") != pack_hash {
                 return Err(VerifyError::PackIdentityMismatch);
             }
         }
     }
     println!("Pack identity:      valid");
 
-    // Governance keys
+    // Governance
     let gov_signers_path = base.join("artifacts/governance/governance_allowed_signers");
     if !gov_signers_path.exists() {
         return Err(VerifyError::MissingFile("governance/governance_allowed_signers".to_string()));
@@ -202,13 +211,11 @@ fn verify_pack(pack_path: &Path) -> Result<(), VerifyError> {
 
     println!("Governance:         {} key(s), {} revoked", gov_keys.len(), revoked.len());
 
-    // Time layer keys
     let time_signers_path = base.join("artifacts/time_layer_v1_signed/keys/allowed_signers");
     let time_keys = if time_signers_path.exists() {
         parse_allowed_signers(&time_signers_path)?
     } else { vec![] };
 
-    // Verify governance signatures
     let gov_sigs = [
         ("artifacts/governance/rotation_commit_hash.txt.sig",
          "artifacts/governance/rotation_commit_hash.txt"),
@@ -223,7 +230,6 @@ fn verify_pack(pack_path: &Path) -> Result<(), VerifyError> {
         sig_count += 1;
     }
 
-    // Verify time layer signature
     let tl_sig = base.join("artifacts/time_layer_v1_signed/attestation_hash.txt.sig");
     let tl_payload = base.join("artifacts/time_layer_v1_signed/attestation_hash.txt");
     if tl_sig.exists() && !time_keys.is_empty() {
@@ -234,35 +240,56 @@ fn verify_pack(pack_path: &Path) -> Result<(), VerifyError> {
     println!("Signatures:         {} verified", sig_count);
     println!("Governance:         valid");
 
+    // Anchor
+    if verify_anchor_flag {
+        match verify_anchor(&pack_hash, rpc_url) {
+            Ok(()) => println!("Anchor:             valid"),
+            Err(e) => return Err(e),
+        }
+    } else {
+        println!("Anchor:             skipped (use --verify-anchor to check on-chain)");
+    }
+
     Ok(())
 }
 
 fn main() {
     let args: Vec<String> = std::env::args().collect();
+
     if args.len() < 2 {
         eprintln!("isc_verify v0.2.0");
-        eprintln!("Usage: isc_verify <evidence_pack.tar>");
+        eprintln!("Usage:");
+        eprintln!("  isc_verify <evidence_pack.tar> [--verify-anchor] [--rpc-url <url>]");
+        eprintln!("  isc_verify --version");
         process::exit(2);
     }
-    match args[1].as_str() {
-        "--version" | "-V" => println!("isc_verify {}", env!("CARGO_PKG_VERSION")),
-        path => {
-            let pack_path = Path::new(path);
-            if !pack_path.exists() {
-                eprintln!("Error: file not found: {}", path);
-                process::exit(1);
-            }
-            match verify_pack(pack_path) {
-                Ok(()) => {
-                    println!("\nPACK VERIFIED");
-                    process::exit(0);
-                }
-                Err(e) => {
-                    eprintln!("\nVERIFICATION FAILED");
-                    eprintln!("Reason: {}", e);
-                    process::exit(1);
-                }
-            }
+
+    if args[1] == "--version" || args[1] == "-V" {
+        println!("isc_verify {}", env!("CARGO_PKG_VERSION"));
+        return;
+    }
+
+    let pack_path = Path::new(&args[1]);
+    let verify_anchor_flag = args.contains(&"--verify-anchor".to_string());
+    let rpc_url = args.windows(2)
+        .find(|w| w[0] == "--rpc-url")
+        .map(|w| w[1].as_str())
+        .unwrap_or("https://sepolia.base.org");
+
+    if !pack_path.exists() {
+        eprintln!("Error: file not found: {}", args[1]);
+        process::exit(1);
+    }
+
+    match verify_pack(pack_path, verify_anchor_flag, rpc_url) {
+        Ok(()) => {
+            println!("\nPACK VERIFIED");
+            process::exit(0);
+        }
+        Err(e) => {
+            eprintln!("\nVERIFICATION FAILED");
+            eprintln!("Reason: {}", e);
+            process::exit(1);
         }
     }
 }
