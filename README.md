@@ -1,47 +1,54 @@
 # ISC Core
-![CI](https://github.com/hakannbjk55-afk/Isc-Core/actions/workflows/ci.yml/badge.svg)
-![Release](https://img.shields.io/github/v/release/hakannbjk55-afk/Isc-Core?display_name=tag)
-Solves: verifiable CI integrity, signed governance lifecycle, and offline release validation.
 
-ISC Core is a deterministic CI verification engine that binds build artifacts to signed governance and time-anchored Evidence Packs.
+ISC Core is a portable, cryptographically verifiable proof format for digital events.
 
-It enforces deterministic hashing, signed governance lifecycle, artifact binding, and offline-verifiable release attestations.
+It produces **evidence packs** — small, tamper-evident bundles that allow anyone to independently verify that a release, deployment, or pipeline event actually occurred, who authorized it, and which artifacts were produced.
 
-ISC Core defines a strict integrity boundary.
+Evidence packs are designed to be portable (a single file that can be shared or archived), independently verifiable (no platform dependency), and audit-ready (governance, signatures, and lineage included).
 
-## Quick Start (60-Second Verification)
+> Logs are claims. Evidence packs are proof.
 
-git clone git@github.com:hakannbjk55-afk/Isc-Core.git
-cd ISC-Core
-python tools/verifier.py examples/sample_evidence_pack_v2.tar
+## What is an evidence pack?
 
-Expected result:
+An evidence pack proves:
 
-Archive SHA256: OK
-Signature: VALID
-Governance rotation: VALID
-Governance revocation: VALID
-Artifact binding: VALID
-CI report hash: MATCH
-VERDICT: TRUSTED
+> This event occurred, under this governance, producing these artifacts, derived from these inputs, and existed at this time.
 
-Verification works fully offline.
+Each pack contains:
 
-## Latest Stable Release
+- **Content integrity** — all files cryptographically hashed
+- **Governance proof** — allowed signers, revocation records, key rotation
+- **Time attestation** — signed timestamp proof
+- **Artifact lineage** — pipeline derivation chain (V2)
 
-https://github.com/hakannbjk55-afk/Isc-Core/releases/tag/v1.7.0-hardening-baseline
+## Verify a release
 
----
+Download the verifier binary from [Releases](https://github.com/hakannbjk55-afk/Isc-Core/releases):
 
-## Seeking External Review
+```bash
+curl -L https://github.com/hakannbjk55-afk/Isc-Core/releases/download/v0.2.0/isc_verify -o isc_verify
+chmod +x isc_verify
+./isc_verify evidence_pack.tar
+Expected output:
+Content integrity:  valid
+Pack identity:      valid
+Governance:         1 key(s), 0 revoked
+Signatures:         3 verified
+Governance:         valid
+Lineage:            skipped (V1 pack, no parents)
+Anchor:             skipped (use --verify-anchor to check on-chain)
 
-ISC Core is stable in CI enforcement and deterministic artifact verification.
-
-External critique is welcome, especially regarding:
-
-- Threat model boundaries
-- CI trust assumptions
-- Supply chain attack surfaces
-- Hash determinism edge cases
-
-Open issues or discussions are encouraged.
+PACK VERIFIED
+Verifier options
+isc_verify evidence_pack.tar
+isc_verify evidence_pack.tar --verify-anchor
+isc_verify evidence_pack.tar --verify-anchor --rpc-url <url>
+isc_verify --version
+Specification
+Evidence Pack V2 — Core Specification
+Verifier Specification V2
+BuildSeal
+BuildSeal seals your CI releases and generates a shareable verification link.
+→ buildseal.io
+License
+MIT
