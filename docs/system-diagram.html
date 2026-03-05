@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>BuildSeal + ISC Core — System Diagram</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0d1117;color:#e6edf3;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",monospace;font-size:13px;padding:24px}
+h1{font-size:20px;font-weight:700;margin-bottom:6px}
+.sub{color:#8b949e;margin-bottom:32px;font-size:13px}
+.section{margin-bottom:40px}
+.st{font-size:11px;font-weight:700;letter-spacing:2px;color:#3fb950;text-transform:uppercase;margin-bottom:16px;border-bottom:1px solid #21262d;padding-bottom:8px}
+.flow{display:flex;align-items:center;flex-wrap:wrap;gap:0;margin-bottom:32px}
+.fb{background:#161b22;border:1px solid #30363d;border-radius:8px;padding:12px 16px;min-width:130px;text-align:center}
+.fb .lb{font-size:11px;color:#8b949e;margin-bottom:4px}
+.fb .vl{font-size:13px;font-weight:600;color:#e6edf3}
+.fb.g{border-color:#238636}.fb.g .vl{color:#3fb950}
+.fb.b{border-color:#1f6feb}.fb.b .vl{color:#58a6ff}
+.fb.y{border-color:#9e6a03}.fb.y .vl{color:#d29922}
+.ar{color:#484f58;font-size:20px;padding:0 8px}
+.pack{background:#0d1117;border:1px solid #238636;border-radius:8px;padding:20px}
+.pt{font-size:13px;font-weight:700;color:#3fb950;margin-bottom:16px}
+.pl{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}
+.layer{background:#161b22;border:1px solid #30363d;border-radius:6px;padding:14px}
+.lt{font-size:11px;font-weight:700;color:#58a6ff;margin-bottom:8px;text-transform:uppercase}
+.li{font-size:11px;color:#8b949e;margin-bottom:4px;font-family:monospace}
+.li span{color:#3fb950}
+.hm{background:#161b22;border:1px solid #30363d;border-radius:8px;padding:20px}
+.hr{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid #21262d}
+.hr:last-child{border-bottom:none}
+.hn{font-weight:700;color:#d29922;font-family:monospace;min-width:160px;font-size:12px}
+.heq{color:#484f58;font-size:11px;min-width:20px}
+.hf{color:#8b949e;font-size:11px;font-family:monospace}
+.hf span{color:#58a6ff}
+.steps{display:flex;flex-direction:column;gap:8px}
+.step{display:flex;gap:12px;align-items:flex-start;background:#161b22;border:1px solid #30363d;border-radius:6px;padding:12px}
+.sn{background:#21262d;border:1px solid #238636;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#3fb950;flex-shrink:0}
+.stitle{font-weight:700;font-size:12px;margin-bottom:3px}
+.sdesc{color:#8b949e;font-size:11px;font-family:monospace}
+.term{background:#010409;border:1px solid #30363d;border-radius:8px;padding:16px;font-family:monospace;font-size:12px}
+.term .line{margin-bottom:3px}
+.term .v{color:#3fb950}
+.term .s{color:#8b949e}
+.term .lbl{color:#58a6ff}
+.term .ok{color:#3fb950;font-weight:700;font-size:14px;margin-top:8px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px}
+.card{background:#161b22;border:1px solid #30363d;border-radius:8px;padding:20px}
+.card h3{font-size:13px;font-weight:700;margin-bottom:12px}
+.card .item{display:flex;align-items:flex-start;gap:8px;margin-bottom:8px;font-size:12px;color:#8b949e}
+.card .item::before{content:"→";color:#3fb950;flex-shrink:0}
+.card .item strong{color:#e6edf3}
+table{border-collapse:collapse;width:100%}
+th{background:#21262d;padding:10px 14px;text-align:left;font-size:11px;font-weight:700;color:#8b949e;text-transform:uppercase;letter-spacing:1px;border:1px solid #30363d}
+td{padding:10px 14px;border:1px solid #30363d;font-size:12px;color:#8b949e}
+td.nm{color:#e6edf3;font-weight:600}
+td.yes{color:#3fb950}
+td.no{color:#484f58}
+td.p{color:#d29922}
+.repos{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+.repo{background:#161b22;border:1px solid #30363d;border-radius:6px;padding:14px}
+.rn{font-weight:700;color:#58a6ff;font-size:12px;margin-bottom:6px;font-family:monospace}
+.rd{color:#8b949e;font-size:11px;margin-bottom:8px}
+.rt{display:inline-block;background:#21262d;border:1px solid #30363d;border-radius:4px;padding:2px 6px;font-size:10px;color:#8b949e;margin-right:4px;margin-bottom:4px}
+</style>
+</head>
+<body>
+<h1>BuildSeal + ISC Core — System Architecture</h1>
+<p class="sub">Portable cryptographic proof for digital events &middot; Logs are claims. Evidence packs are proof.</p>
+
+<div class="section">
+<div class="st">User Flow</div>
+<div class="flow">
+<div class="fb"><div class="lb">Developer</div><div class="vl">CI Pipeline</div></div>
+<div class="ar">&#8594;</div>
+<div class="fb g"><div class="lb">ISC Core</div><div class="vl">Evidence Pack</div></div>
+<div class="ar">&#8594;</div>
+<div class="fb b"><div class="lb">BuildSeal API</div><div class="vl">Seal + Queue</div></div>
+<div class="ar">&#8594;</div>
+<div class="fb y"><div class="lb">Batch Anchor</div><div class="vl">Every 5 min</div></div>
+<div class="ar">&#8594;</div>
+<div class="fb g"><div class="lb">Auditor</div><div class="vl">verify.buildseal.io</div></div>
+</div>
+</div>
+
+<div class="section">
+<div class="st">Evidence Pack Structure (~30KB)</div>
+<div class="pack">
+<div class="pt">&#128230; evidence_pack_v2.tar</div>
+<div class="pl">
+<div class="layer"><div class="lt">Content Layer</div><div class="li"><span>artifacts/</span>ci_report.json</div><div class="li"><span>artifacts/</span>signatures/</div><div class="li"><span>content_manifest</span>.sha256</div></div>
+<div class="layer"><div class="lt">Governance Layer</div><div class="li"><span>governance/</span>allowed_signers</div><div class="li"><span>governance/</span>revocation_record</div><div class="li"><span>governance/</span>rotation_commit</div></div>
+<div class="layer"><div class="lt">Time Layer</div><div class="li"><span>time_layer/</span>attestation.json</div><div class="li"><span>time_layer/</span>attestation.sig</div><div class="li"><span>time_layer/</span>keys/</div></div>
+<div class="layer"><div class="lt">Lineage Layer (V2)</div><div class="li"><span>parents:</span> [pack_hash]</div><div class="li"><span>inputs:</span> [sha256:...]</div><div class="li"><span>outputs:</span> [sha256:...]</div></div>
+</div>
+</div>
+</div>
+
+<div class="section">
+<div class="st">Three-Layer Hash Model</div>
+<div class="hm">
+<div class="hr"><div class="hn">meta_hash</div><div class="heq">=</div><div class="hf">SHA256(<span>canonical(ci_report.json)</span>)</div></div>
+<div class="hr"><div class="hn">content_hash</div><div class="heq">=</div><div class="hf">SHA256(<span>canonical(content_manifest)</span>)</div></div>
+<div class="hr"><div class="hn">pack_hash</div><div class="heq">=</div><div class="hf">SHA256(<span>meta_hash</span> || <span>content_hash</span>)</div></div>
+<div class="hr"><div class="hn">anchor (optional)</div><div class="heq">=</div><div class="hf"><span>pack_hash</span> &#8594; Base L2 (--verify-anchor)</div></div>
+</div>
+</div>
+
+<div class="section">
+<div class="st">isc_verify — Verification Algorithm</div>
+<div class="steps">
+<div class="step"><div class="sn">1</div><div><div class="stitle">Extract + Validate Structure</div><div class="sdesc">tar extract &#8594; path traversal check &#8594; required files present</div></div></div>
+<div class="step"><div class="sn">2</div><div><div class="stitle">Content Integrity</div><div class="sdesc">for each file in manifest: SHA256(file) == manifest_hash &#8594; content_hash</div></div></div>
+<div class="step"><div class="sn">3</div><div><div class="stitle">Pack Identity</div><div class="sdesc">SHA256(meta_hash || content_hash) == stored pack_hash</div></div></div>
+<div class="step"><div class="sn">4</div><div><div class="stitle">Governance Verification</div><div class="sdesc">signer in allowed_signers AND NOT in revocation_record</div></div></div>
+<div class="step"><div class="sn">5</div><div><div class="stitle">Signature Verification</div><div class="sdesc">ed25519_verify(sig, payload, public_key) &#8594; 3 signatures</div></div></div>
+<div class="step"><div class="sn">6</div><div><div class="stitle">Lineage Verification (V2)</div><div class="sdesc">for parent in parents: parent.outputs &#8838; child.inputs</div></div></div>
+<div class="step"><div class="sn">7</div><div><div class="stitle">Anchor Verification (optional)</div><div class="sdesc">--verify-anchor: pack_hash exists on Base L2</div></div></div>
+</div>
+</div>
+
+<div class="section">
+<div class="st">Verifier Output</div>
+<div class="term">
+<div class="line lbl">$ isc_verify evidence_pack_v2.tar</div>
+<div class="line v">Content integrity:  valid</div>
+<div class="line v">Pack identity:      valid</div>
+<div class="line v">Governance:         1 key(s), 0 revoked</div>
+<div class="line v">Signatures:         3 verified</div>
+<div class="line v">Governance:         valid</div>
+<div class="line s">Lineage:            skipped (V1 pack, no parents)</div>
+<div class="line s">Anchor:             skipped (use --verify-anchor to check on-chain)</div>
+<div class="line ok">PACK VERIFIED</div>
+</div>
+</div>
+
+<div class="section">
+<div class="st">System Components</div>
+<div class="grid">
+<div class="card"><h3>&#128039; ISC Core</h3><div class="item"><strong>Evidence Pack</strong> — portable proof bundle</div><div class="item"><strong>isc_verify</strong> — standalone verifier (Rust, 971KB)</div><div class="item"><strong>Governance</strong> — allowed signers, revocation, rotation</div><div class="item"><strong>Time Layer</strong> — signed timestamp attestation</div><div class="item"><strong>Spec</strong> — EVIDENCE_PACK_V2.md, VERIFIER_SPEC_V2.md</div></div>
+<div class="card"><h3>&#127760; BuildSeal API</h3><div class="item"><strong>POST /seal</strong> — artifact_hash &#8594; seal_id + verify_url</div><div class="item"><strong>GET /seal/:id</strong> — status check</div><div class="item"><strong>Batch processor</strong> — every 5 min, 100 seals/batch</div><div class="item"><strong>PostgreSQL</strong> — persistent seal storage</div><div class="item"><strong>Render</strong> — hosted, always-on</div></div>
+<div class="card"><h3>&#9881;&#65039; BuildSeal Action</h3><div class="item"><strong>GitHub Action</strong> — one line YAML</div><div class="item"><strong>Input</strong> — artifact path + private_key</div><div class="item"><strong>Output</strong> — verify_url</div><div class="item"><strong>Node.js</strong> — ethers.js + @actions/core</div></div>
+<div class="card"><h3>&#9989; Verifier UI</h3><div class="item"><strong>verify.buildseal.io</strong> — client-side only</div><div class="item"><strong>No server</strong> — reads chain directly</div><div class="item"><strong>VERIFIED badge</strong> — TX hash, merkle root, meta hash</div></div>
+<div class="card"><h3>&#127968; Landing Page</h3><div class="item"><strong>buildseal.io</strong> — live</div><div class="item"><strong>www.buildseal.io</strong> — live</div><div class="item"><strong>Vercel</strong> — auto deploy from GitHub</div><div class="item"><strong>Pricing</strong> — $99 / $349 / $999 per month</div></div>
+<div class="card"><h3>&#9935;&#65039; Chain Layer (Optional)</h3><div class="item"><strong>Contract</strong> — BuildSealAnchor.sol</div><div class="item"><strong>Network</strong> — Base Sepolia (testnet)</div><div class="item"><strong>--verify-anchor</strong> — optional flag in isc_verify</div></div>
+</div>
+</div>
+
+<div class="section">
+<div class="st">Competitive Positioning</div>
+<table>
+<thead><tr><th>System</th><th>Artifact Sig</th><th>Governance</th><th>Time Proof</th><th>Lineage</th><th>Portable Pack</th><th>Verify Link</th></tr></thead>
+<tbody>
+<tr><td class="nm">Sigstore</td><td class="yes">&#10003;</td><td class="no">&#8212;</td><td class="p">&#9888;</td><td class="no">&#8212;</td><td class="no">&#8212;</td><td class="no">&#8212;</td></tr>
+<tr><td class="nm">SLSA</td><td class="p">&#9888;</td><td class="no">&#8212;</td><td class="no">&#8212;</td><td class="p">&#9888;</td><td class="no">&#8212;</td><td class="no">&#8212;</td></tr>
+<tr><td class="nm">in-toto</td><td class="yes">&#10003;</td><td class="p">&#9888;</td><td class="no">&#8212;</td><td class="yes">&#10003;</td><td class="p">&#9888;</td><td class="no">&#8212;</td></tr>
+<tr><td class="nm">GitHub Attestation</td><td class="yes">&#10003;</td><td class="no">&#8212;</td><td class="no">&#8212;</td><td class="no">&#8212;</td><td class="no">&#8212;</td><td class="no">&#8212;</td></tr>
+<tr><td class="nm" style="color:#3fb950">ISC Core + BuildSeal</td><td class="yes">&#10003;</td><td class="yes">&#10003;</td><td class="yes">&#10003;</td><td class="yes">&#10003; V2</td><td class="yes">&#10003; 30KB</td><td class="yes">&#10003;</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="section">
+<div class="st">GitHub Repositories</div>
+<div class="repos">
+<div class="repo"><div class="rn">hakannbjk55-afk/Isc-Core</div><div class="rd">Evidence pack format, verifier binary, spec</div><span class="rt">rust</span><span class="rt">supply-chain-security</span><span class="rt">audit</span></div>
+<div class="repo"><div class="rn">hakannbjk55-afk/buildseal-action</div><div class="rd">GitHub Action — one line CI integration</div><span class="rt">github-action</span><span class="rt">release-integrity</span></div>
+<div class="repo"><div class="rn">hakannbjk55-afk/buildseal-api</div><div class="rd">Managed sealing API — Node.js + PostgreSQL</div><span class="rt">nodejs</span><span class="rt">api</span></div>
+<div class="repo"><div class="rn">hakannbjk55-afk/buildseal-landing</div><div class="rd">Landing page — buildseal.io</div><span class="rt">vercel</span><span class="rt">html</span></div>
+</div>
+</div>
+
+</body>
+</html>
