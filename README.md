@@ -8,6 +8,16 @@ Evidence packs are designed to be portable (a single file that can be shared or 
 
 > Logs are claims. Evidence packs are proof.
 
+## Try it in 30 seconds
+
+```bash
+curl -L https://github.com/hakannbjk55-afk/Isc-Core/releases/download/v0.2.0/isc_verify -o isc_verify
+chmod +x isc_verify
+./isc_verify evidence_pack.tar
+```
+
+ISC Core lets anyone verify a build or release offline using a portable evidence pack — no external log or service required.
+
 ## What is an evidence pack?
 
 An evidence pack proves:
