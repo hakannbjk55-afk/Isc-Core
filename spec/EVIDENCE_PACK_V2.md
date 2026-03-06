@@ -150,6 +150,17 @@ WRONG
 SHA256((meta_hash_hex + content_hash_hex).encode())
 CORRECT
 SHA256(bytes.fromhex(meta_hash) + bytes.fromhex(content_hash))
+### Encoding constraint
+
+`meta_hash` and `content_hash` MUST be interpreted as lowercase hex encoded SHA-256 digests.
+
+Verifiers MUST decode them to raw 32-byte values before computing `pack_hash`.
+
+Implementations MUST reject:
+- Uppercase hex strings
+- Hex strings with whitespace
+- Hex strings not exactly 64 characters long
+
 ### Verification rule
 
 A verifier MUST:
