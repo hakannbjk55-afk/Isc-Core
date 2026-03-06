@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>BuildSeal Verification Report</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0d1117;color:#c9d1d9;font-family:monospace;padding:20px}
+.card{background:#161b22;border:1px solid #30363d;border-radius:8px;max-width:620px;margin:20px auto;overflow:hidden}
+.header{padding:16px;border-bottom:1px solid #30363d}
+.header h1{font-size:13px;font-weight:700;color:#e6edf3;letter-spacing:2px}
+.header p{font-size:11px;color:#8b949e;margin-top:4px}
+.status-row{padding:12px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #30363d}
+.badge{padding:4px 12px;border-radius:4px;font-size:12px;font-weight:700;letter-spacing:1px}
+.badge.ok{background:#1a4731;color:#3fb950;border:1px solid #238636}
+.badge.bad{background:#2d1a1a;color:#f85149;border:1px solid #da3633}
+.badge.loading{background:#21262d;color:#8b949e;border:1px solid #30363d}
+.row{padding:10px 16px;border-bottom:1px solid #21262d;display:flex;gap:12px}
+.k{font-size:11px;color:#8b949e;min-width:140px;flex-shrink:0}
+.v{font-size:12px;color:#e6edf3;word-break:break-all}
+.v a{color:#58a6ff;text-decoration:none}
+.actions{padding:16px;border-top:1px solid #30363d;display:flex;flex-direction:column;gap:10px}
+.btn{display:block;padding:10px 16px;border-radius:6px;font-size:12px;font-weight:600;text-align:center;text-decoration:none;cursor:pointer;border:none;font-family:monospace}
+.btn-primary{background:#238636;color:#fff}
+.btn-secondary{background:#21262d;color:#c9d1d9;border:1px solid #30363d}
+.footer{padding:12px 16px;border-top:1px solid #30363d;font-size:11px;color:#484f58;text-align:center}
+.footer a{color:#8b949e;text-decoration:none}
+.independent{background:#0d1117;border:1px solid #30363d;border-radius:6px;padding:12px;margin:0 16px 16px;font-size:11px;color:#8b949e}
+.independent code{color:#3fb950;font-size:11px}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="header">
+    <h1>BUILDSEAL VERIFICATION REPORT</h1>
+    <p id="generated"></p>
+  </div>
+  <div class="status-row">
+    <span class="k">STATUS</span>
+    <span class="badge loading" id="badge">LOADING...</span>
+  </div>
+  <div class="row"><div class="k">Seal ID</div><div class="v" id="sealId">—</div></div>
+  <div class="row"><div class="k">Artifact Hash</div><div class="v" id="artifactHash">—</div></div>
+  <div class="row"><div class="k">Repository</div><div class="v" id="repo">—</div></div>
+  <div class="row"><div class="k">Commit</div><div class="v" id="commit">—</div></div>
+  <div class="row"><div class="k">Sealed At</div><div class="v" id="createdAt">—</div></div>
+  <div class="row"><div class="k">Governance</div><div class="v" id="governance">Ed25519 — ISC Core</div></div>
+
+  <div class="actions">
+    <a class="btn btn-primary" id="downloadBtn" href="#" style="display:none">
+      &#8595; Download Evidence Pack
+    </a>
+    <a class="btn btn-secondary" href="https://github.com/hakannbjk55-afk/Isc-Core/releases/download/v0.2.0/isc_verify" target="_blank">
+      &#8595; Download isc_verify binary
+    </a>
+  </div>
+
+  <div class="independent">
+    <div style="color:#e6edf3;margin-bottom:6px;font-weight:700">Independent Verification</div>
+    Verify without trusting BuildSeal. Run locally:<br/><br/>
+    <code>curl -L https://github.com/hakannbjk55-afk/Isc-Core/releases/download/v0.2.0/isc_verify -o isc_verify</code><br/>
+    <code>chmod +x isc_verify</code><br/>
+    <code>./isc_verify evidence_pack.tar</code>
+  </div>
+
+  <div class="footer">
+    <a href="https://buildseal.io">buildseal.io</a> &middot;
+    <a href="https://github.com/hakannbjk55-afk/Isc-Core" target="_blank">Open source verifier</a> &middot;
+    Independently verifiable
+  </div>
+</div>
+
+<script>
+const API = 'https://buildseal-api.onrender.com';
+
+function getSealId() {
+  const parts = window.location.pathname.split('/');
+  return parts[parts.length - 1] || parts[parts.length - 2];
+}
+
+async function load() {
+  const sealId = getSealId();
+  if (!sealId || sealId === 'release') {
+    document.getElementById('badge').textContent = 'NO SEAL ID';
+    return;
+  }
+
+  document.getElementById('sealId').textContent = sealId;
+  document.getElementById('generated').textContent = 'Generated ' + new Date().toUTCString();
+
+  try {
+    const res = await fetch(API + '/seal/' + sealId);
+    if (!res.ok) throw new Error('not found');
+    const data = await res.json();
+
+    const badge = document.getElementById('badge');
+    if (data.status === 'verified') {
+      badge.textContent = 'VERIFIED';
+      badge.className = 'badge ok';
+    } else if (data.status === 'queued') {
+      badge.textContent = 'PENDING';
+      badge.className = 'badge loading';
+    } else {
+      badge.textContent = data.status.toUpperCase();
+      badge.className = 'badge bad';
+    }
+
+    if (data.artifact_hash) document.getElementById('artifactHash').textContent = data.artifact_hash;
+    if (data.repo) document.getElementById('repo').textContent = data.repo;
+    if (data.commit) document.getElementById('commit').textContent = data.commit;
+    if (data.created_at) document.getElementById('createdAt').textContent = new Date(data.created_at).toUTCString();
+
+    if (data.evidence_pack_url) {
+      const btn = document.getElementById('downloadBtn');
+      btn.href = data.evidence_pack_url;
+      btn.style.display = 'block';
+    }
+
+  } catch(e) {
+    document.getElementById('badge').textContent = 'NOT FOUND';
+    document.getElementById('badge').className = 'badge bad';
+  }
+}
+
+load();
+</script>
+</body>
+</html>
