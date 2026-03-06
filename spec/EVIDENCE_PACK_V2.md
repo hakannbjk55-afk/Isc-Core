@@ -131,3 +131,33 @@ Different implementations (Python, Rust, Node.js) produce different JSON byte se
 ### Reference
 
 RFC 8785: https://www.rfc-editor.org/rfc/rfc8785
+
+## 13. pack_hash Computation
+
+`meta_hash` and `content_hash` are SHA-256 digests and MUST be treated as raw 32-byte values for all hash composition operations.
+
+The `pack_hash` MUST be computed as:
+pack_hash = SHA256(meta_hash_bytes || content_hash_bytes)
+Where:
+- `meta_hash_bytes` is the raw 32-byte digest of `meta_hash`
+- `content_hash_bytes` is the raw 32-byte digest of `content_hash`
+- `||` means byte concatenation
+
+### Encoding rule
+
+Hex encoding is for display and serialization only. Implementations MUST NOT compute `pack_hash` from hex string concatenation:
+WRONG
+SHA256((meta_hash_hex + content_hash_hex).encode())
+CORRECT
+SHA256(bytes.fromhex(meta_hash) + bytes.fromhex(content_hash))
+### Verification rule
+
+A verifier MUST:
+1. Parse `meta_hash` as a 64-character lowercase hex SHA-256 digest
+2. Parse `content_hash` as a 64-character lowercase hex SHA-256 digest
+3. Decode both into raw 32-byte values
+4. Compute `pack_hash = SHA256(meta_hash_bytes || content_hash_bytes)`
+
+### Compatibility note
+
+Earlier implementations may have computed `pack_hash` using hex string concatenation. That method is deprecated and MUST NOT be used for Evidence Pack V2 and later.

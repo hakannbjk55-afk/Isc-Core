@@ -242,11 +242,16 @@ fn verify_pack(pack_path: &Path, verify_anchor_flag: bool, rpc_url: &str) -> Res
     let manifest_raw = fs::read(&manifest_path).map_err(|e| VerifyError::IoError(e.to_string()))?;
     let content_hash = sha256_bytes(&manifest_raw);
     let ci_raw = fs::read(&ci_report_path).map_err(|e| VerifyError::IoError(e.to_string()))?;
-    let meta_hash = sha256_bytes(&ci_raw);
-    let pack_hash = sha256_bytes(format!("{}{}", meta_hash, content_hash).as_bytes());
-
     let ci_json: serde_json::Value = serde_json::from_slice(&ci_raw)
         .unwrap_or(serde_json::Value::Object(Default::default()));
+
+    let stripped_json = {
+        let mut m = ci_json.as_object().cloned().unwrap_or_default();
+        m.remove("pack_hash"); m.remove("meta_hash"); m.remove("content_hash");
+        serde_json::to_vec(&serde_json::Value::Object(m)).unwrap()
+    };
+    let meta_hash = sha256_bytes(&stripped_json);
+    let pack_hash = sha256_bytes(format!("{}{}", meta_hash, content_hash).as_bytes());
 
     if let Some(stored) = ci_json.get("pack_hash").and_then(|v| v.as_str()) {
         if stored.trim_start_matches("sha256:") != pack_hash {
