@@ -108,3 +108,26 @@ Does not replace CI systems, provenance frameworks, or artifact registries. Focu
 11. Summary
 Evidence Pack V2 proves: This event occurred, under this governance, producing these artifacts, derived from these inputs, and existed at this time.
 All claims are cryptographically verifiable using the evidence pack alone together with the timestamp anchor.
+
+## 12. Canonical JSON Definition
+
+All JSON hashing in Evidence Pack V2 MUST use canonical JSON as defined by RFC 8785 (JCS — JSON Canonicalization Scheme).
+
+### Rules
+
+- Keys MUST be sorted lexicographically (Unicode code point order)
+- No insignificant whitespace
+- Strings MUST be UTF-8 encoded
+- Numbers MUST use their simplest representation (no trailing zeros, no unnecessary decimals)
+- Float `100.0` MUST be serialized as `100`
+
+### meta_hash computation
+stripped = remove(ci_report, ["pack_hash", "meta_hash", "content_hash"])
+meta_hash = SHA256(JCS(stripped))
+### Why this matters
+
+Different implementations (Python, Rust, Node.js) produce different JSON byte sequences for the same data. Without canonical JSON, the same evidence pack would produce different `meta_hash` values depending on the verifier implementation. This would break cross-implementation verification.
+
+### Reference
+
+RFC 8785: https://www.rfc-editor.org/rfc/rfc8785
