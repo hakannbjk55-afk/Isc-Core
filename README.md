@@ -24,6 +24,8 @@ An evidence pack proves:
 
 > This event occurred, under this governance, producing these artifacts, derived from these inputs, and existed at this time.
 
+> This artifact was produced from this commit, signed under authorized governance, and has not been modified since.
+
 Each pack contains:
 
 - **Content integrity** — all files cryptographically hashed
