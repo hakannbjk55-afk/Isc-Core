@@ -240,7 +240,18 @@ fn verify_pack(pack_path: &Path, verify_anchor_flag: bool, rpc_url: &str) -> Res
     println!("Content integrity:  valid");
 
     let manifest_raw = fs::read(&manifest_path).map_err(|e| VerifyError::IoError(e.to_string()))?;
-    let content_hash = sha256_bytes(&manifest_raw);
+    // content_hash excludes ci_report.json (spec: circular dependency prevention)
+    let manifest_str = String::from_utf8_lossy(&manifest_raw);
+    let manifest_no_ci: String = manifest_str.lines()
+        .filter(|l| !l.contains("ci_report.json"))
+        .map(|l| format!("{}
+", l))
+        .collect();
+    let content_hash = if manifest_no_ci.trim().is_empty() {
+        sha256_bytes(&manifest_raw)
+    } else {
+        sha256_bytes(manifest_no_ci.as_bytes())
+    };
     let ci_raw = fs::read(&ci_report_path).map_err(|e| VerifyError::IoError(e.to_string()))?;
     let ci_json: serde_json::Value = serde_json::from_slice(&ci_raw)
         .unwrap_or(serde_json::Value::Object(Default::default()));
@@ -251,7 +262,16 @@ fn verify_pack(pack_path: &Path, verify_anchor_flag: bool, rpc_url: &str) -> Res
         serde_json::to_vec(&serde_json::Value::Object(m)).unwrap()
     };
     let meta_hash = sha256_bytes(&stripped_json);
-    let pack_hash = sha256_bytes(format!("{}{}", meta_hash, content_hash).as_bytes());
+    // pack_hash MUST use raw bytes, not hex string concatenation (spec section 13)
+    let meta_bytes = hex::decode(&meta_hash).map_err(|e| VerifyError::ParseError(e.to_string()))?;
+    let content_bytes = hex::decode(&content_hash).map_err(|e| VerifyError::ParseError(e.to_string()))?;
+    if meta_bytes.len() != 32 || content_bytes.len() != 32 {
+        return Err(VerifyError::ParseError("meta_hash/content_hash must be 32-byte digests".to_string()));
+    }
+    let mut pack_input = Vec::with_capacity(64);
+    pack_input.extend_from_slice(&meta_bytes);
+    pack_input.extend_from_slice(&content_bytes);
+    let pack_hash = sha256_bytes(&pack_input);
 
     if let Some(stored) = ci_json.get("pack_hash").and_then(|v| v.as_str()) {
         if stored.trim_start_matches("sha256:") != pack_hash {
