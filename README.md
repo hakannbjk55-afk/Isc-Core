@@ -8,6 +8,12 @@ Evidence packs are designed to be portable (a single file that can be shared or 
 
 > Logs are claims. Evidence packs are proof.
 
+## Design Principles
+
+1. **Verification is always offline** — no BuildSeal, no internet required
+2. **Pack format is open** — anyone can implement a verifier
+3. **Production is paid, verification is free** — forever
+
 ## Try it in 30 seconds
 
 ```bash
