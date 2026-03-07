@@ -374,7 +374,19 @@ fn main() {
             process::exit(0);
         }
         Err(e) => {
+            let code = match &e {
+                VerifyError::HashMismatch(_) => "HASH_MISMATCH",
+                VerifyError::PackIdentityMismatch => "PACK_IDENTITY_MISMATCH",
+                VerifyError::SignatureError(_) => "SIGNATURE_INVALID",
+                VerifyError::GovernanceError(_) => "GOVERNANCE_ERROR",
+                VerifyError::MissingFile(_) => "MISSING_FILE",
+                VerifyError::LineageError(_) => "LINEAGE_MISMATCH",
+                VerifyError::AnchorError(_) => "ANCHOR_ERROR",
+                VerifyError::ParseError(_) => "PARSE_ERROR",
+                VerifyError::IoError(_) => "IO_ERROR",
+            };
             eprintln!("\nVERIFICATION FAILED");
+            eprintln!("Code:   {}", code);
             eprintln!("Reason: {}", e);
             process::exit(1);
         }
