@@ -7,8 +7,8 @@ and verify them later without trusting the original server, repository, or Build
 
 The goal of BuildSeal is simple:
 
-Anyone should be able to verify what was built, when it was built, and by whom —
-using only the artifact and the evidence pack.
+> Anyone should be able to verify what was built, when it was built, and by whom —
+> using only the artifact and the evidence pack.
 
 
 ## Quick start
@@ -24,11 +24,8 @@ https://verify.buildseal.io/release/seal_1772887285176_trxc9ufi
 Verify:
 ./isc_verify evidence_pack.tar
 Result:
-
 Genuine  -> artifact matches the sealed build
 Modified -> artifact was changed
-
-
 ## Overview
 
 BuildSeal produces a self-contained proof bundle that includes:
@@ -58,11 +55,11 @@ Verification can be done:
 
 ## Design Principles
 
-No central trust required.
-Verification must work offline.
-Proof must be portable.
-Artifacts must be self-verifiable.
-Failure must be obvious.
+No central trust required
+Verification must work offline
+Proof must be portable
+Artifacts must be self-verifiable
+Failure must be obvious
 
 If verification requires trusting a server, it is not verification.
 If proof cannot be moved, it is not proof.
@@ -71,10 +68,10 @@ If integrity cannot be checked locally, it is not integrity.
 
 ## What BuildSeal is NOT
 
-BuildSeal is not a CI system.
-BuildSeal is not a package registry.
-BuildSeal is not a signing server.
-BuildSeal is not a blockchain project.
+BuildSeal is not a CI system
+BuildSeal is not a package registry
+BuildSeal is not a signing server
+BuildSeal is not a blockchain project
 
 BuildSeal is a verification tool.
 
@@ -91,7 +88,10 @@ ISC provides:
 - Policy-based verification
 - Offline trust model
 
-Verification output is binary: Genuine or Modified.
+Verification output is binary:
+
+- Genuine
+- Modified
 
 
 ## Independent verification
@@ -107,6 +107,7 @@ curl -L https://github.com/hakannbjk55-afk/Isc-Core/releases/download/v0.2.0/isc
 chmod +x isc_verify
 ./isc_verify evidence_pack.tar
 The result must match the web report.
+
 If it does not match, the artifact is not trusted.
 
 
