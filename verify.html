@@ -146,9 +146,9 @@ async function load() {
     if (data.status === 'verified') {
       badge.textContent = 'VERIFIED';
       badge.className = 'badge genuine';
-      vi.textContent = '✓';
+      vi.textContent = '✔';
       vw.textContent = 'Genuine';
-      vsub.textContent = 'Verified by BuildSeal · ' + new Date().toUTCString();
+      vsub.textContent = 'Cryptographically Verified · ISC Core · ' + new Date().toLocaleDateString('en-GB', {day:'2-digit',month:'short',year:'numeric'});
       vs.className = 'verdict-screen genuine show';
     } else if (data.status === 'queued' || data.status === 'pending') {
       badge.textContent = 'PENDING';
@@ -157,9 +157,9 @@ async function load() {
     } else {
       badge.textContent = 'NOT FOUND';
       badge.className = 'badge notfound';
-      vi.textContent = '✗';
+      vi.textContent = '✖';
       vw.textContent = 'Modified';
-      vsub.textContent = 'Verification failed';
+      vsub.textContent = 'Integrity check failed · ISC Core · ' + new Date().toLocaleDateString('en-GB', {day:'2-digit',month:'short',year:'numeric'});
       vs.className = 'verdict-screen modified show';
     }
 
