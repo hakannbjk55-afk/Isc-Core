@@ -10,6 +10,27 @@ The goal of BuildSeal is simple:
 Anyone should be able to verify what was built, when it was built, and by whom —
 using only the artifact and the evidence pack.
 
+
+## Quick start
+
+Download verifier:
+
+https://github.com/hakannbjk55-afk/Isc-Core/releases/download/v0.2.0/isc_verify
+
+Make it executable:
+chmod +x isc_verify
+Download example evidence pack:
+https://verify.buildseal.io/release/seal_1772887285176_trxc9ufi
+Verify:
+./isc_verify evidence_pack.tar
+Result:
+
+Genuine  -> artifact matches the sealed build
+Modified -> artifact was changed
+
+
+## Overview
+
 BuildSeal produces a self-contained proof bundle that includes:
 
 - Artifact hash
@@ -25,25 +46,14 @@ Verification can be done:
 - without a central registry
 - without trusting BuildSeal
 
-This makes BuildSeal suitable for:
+
+## Use cases
 
 - software supply chain verification
 - release integrity validation
 - audit evidence packs
 - reproducible build workflows
 - security-sensitive environments
-
-
-## Example
-
-Verify an evidence pack:
-isc_verify evidence_pack.tar
-Or verify using the web report:
-https://verify.buildseal.io/release/<seal_id>
-Result:
-
-- Genuine — cryptographically verified
-- Modified — integrity check failed
 
 
 ## Design Principles
@@ -84,13 +94,15 @@ ISC provides:
 Verification output is binary: Genuine or Modified.
 
 
-## Independent Verification
+## Independent verification
 
 You can verify without trusting BuildSeal.
 
 Download verifier:
 
 https://github.com/hakannbjk55-afk/Isc-Core/releases/download/v0.2.0/isc_verify
+
+Example:
 curl -L https://github.com/hakannbjk55-afk/Isc-Core/releases/download/v0.2.0/isc_verify -o isc_verify
 chmod +x isc_verify
 ./isc_verify evidence_pack.tar
